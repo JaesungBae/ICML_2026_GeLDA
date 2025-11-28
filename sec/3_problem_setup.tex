@@ -1,0 +1,63 @@
+% We consider a recognition problem where the goal is to classify inputs $x$ into labels $y \in \mathcal{Y}$. In many real-world scenarios, the training data exhibits label imbalance or partial supervision, where certain classes are underrepresented or entirely missing within parts of the data. Let the overall training dataset be $\mathcal{S} = \{D_i \mid i = 1, 2, \ldots, M\}$, where each $D_i = \{ (x_n, y_n) \mid y \in \mathcal{Y}_i,\ n = 1, \ldots, N_i \}$ is a subset of samples for the same classification task. In the data-scarce setting, soame subsets $D_i$ may contain only partial coverage of the label space $\mathcal{Y}_i$—either missing certain classes entirely or containing very few samples from them.
+
+% Since all subsets correspond to the same underlying task, we assume they share common structural patterns useful for recognition, while also exhibiting subset-specific differences. For example, in multilingual speech emotion recognition (SER), each $D_i$ could represent data from a different language, and $\mathcal{Y}$ corresponds to a fixed set of emotion categories. Then, for low-resource languages, $\mathcal{Y}_i$ may only cover certain emotion types. Then, our assumption is that emotional expressions share cross-linguistic patterns, but at the same time, each language may manifest emotions in a distinct way. Therefore, simply building a recognition system that works well for high-resource subsets and apply it to low-resource subsets is problematic.
+
+% Nowadays, foundation models trained with massive amount of dataset are able to extract general purpose features, and achieved the state-of-the-art performance with simple adaptation in various downstream tasks. 
+
+
+% \paragraph{Problem Setting.}
+\subsection{Imbalanced datasets}
+A recognition problem aims to map inputs $x$ into labels $y$ chosen from a fixed set of labels $\mathcal{Y}$. In many real-world scenarios, the training data suffers from \textit{label imbalance} or \textit{partial supervision}, where certain classes are severely underrepresented or entirely missing in parts of the dataset. Let $\mathcal{D}= \cup_{k=1}^K \mathcal{D}^{(k)}$ be the entire training set, where each subset $D^{(k)}\!=\!\{ (x_i, y_i) \mid y_i\!\in\!\mathcal{Y}^{(k)}, \ i \!\!=\!\! 1, \ldots, N_k \}$ consists of $N_k$ samples, covering the label set only partially: $\mathcal{Y}^{(k)} \subseteq \mathcal{Y}$. This case implies data scarcity, typically due to missing certain classes or containing few examples.
+
+Since all subsets $D^{(k)}$ correspond to the same underlying recognition task, we assume they share \textit{task-relevant structural patterns}, while also exhibiting \textit{subset-specific variations}. For example, in multilingual SER, each $D^{(k)}$ may represent data collected from language $k$, while $\mathcal{Y}$ corresponds to a fixed set of global emotion categories. In such settings, low-resource languages may only cover a subset of these emotions, i.e., $\mathcal{Y}^{(k)} \subset \mathcal{Y}$. 
+While emotional expressions share general patterns across languages, e.g., angry speech typically has a higher pitch than sad utterances, they also exhibit considerable variation among languages due to the linguistic structures and cultural nuances~\cite{language_relationship_in_emotion_1, language_relationship_in_emotion_2}. This makes it insufficient to rely solely on models trained on high-resource languages without proper adaptation to low-resource ones.
+% While emotional expressions may share \textit{cross-linguistic regularities}, e.g., angry speech is with a higher pitch than sad utterances, they can also exhibit \textit{language-specific characteristics}, e.g., in a specific language, the pitch variation among different emotions is low, making it insufficient to rely solely on models trained on high-resource languages without proper adaptation to low-resource ones~\cite{language_relationship_in_emotion_1, language_relationship_in_emotion_2}. 
+
+
+\begin{figure}[t]
+     \centering
+     \begin{subfigure}[b]{0.2515\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figs/p(x).pdf}\vspace{-0.05in}
+         \caption{}
+         \label{fig:input_dist}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.2515\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figs/p(z).pdf}\vspace{-0.05in}
+         \caption{}
+         \label{fig:feature_dist}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.239\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figs/Dtothek.pdf}\vspace{-0.05in}
+         \caption{}
+         \label{fig:low-resource-samples}
+     \end{subfigure}
+     \hfill
+     \begin{subfigure}[b]{0.239\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figs/p(zbar).pdf}\vspace{-0.05in}
+         \caption{}
+         \label{fig:augmented}
+     \end{subfigure}
+        \caption{Illustration of the proposed GeLDA in the feature space. (a) Original data distribution $\mathcal{X}$ with a complex decision boundary. (b) More seprable class distributions in the learned feature space $\mathcal{Z}$. (c) Few samples from the low-resource subset $\mathcal{D}^{(\kappa)}$. Contours are from the unknown ground-truth distribution of sub-domain $\kappa$. (d) GeLDA's feature-space data augmentation results $\bar{z}$, whose sample distribution resemble the distribution of $k'$. $\kappa$ and $k'$ are semantically similar sub-domains.  }
+        \label{fig:illustration}
+\end{figure}
+
+
+\subsection{Improving separability in latent spaces}
+Deep learning research has shown that a series of nonlinear feature transformations guided by supervised learning objectives can increase the separability of the classes in higher layers, where more abstract, task-specific features are learned \cite{pmlr-v202-rangamani23a, Prevalence_of_neural_collapse}. 
+% In this regard, foundation models trained on large, diverse datasets have shown strong generalization across tasks by providing robust and transferable representations. These models can help improve overall performance, especially for underrepresented classes, by capturing patterns that are difficult to learn from a limited subset of data alone. 
+Figure \ref{fig:input_dist} and \ref{fig:feature_dist} illustrate the merit of such a feature space, where the highly nonlinear classification problem in the raw data space $\mathcal{X}$ becomes more separable in the new feature space $\mathcal{Z}$. Meanwhile, score-based generative models in the latent space \cite{ldm, audio_ldm} have already shown their advantage since they can focus on the high-level structure captured in a smooth and lower-dimensional latent space, while the low-level details (e.g., pixel-level texture) are left to the decoding process. The basic assumption is that, in the feature space, simple (e.g., linear) relationships between feature vectors represent their perceptual similarity.
+
+\noindent\textbf{Proposition 1.} There exists a feature transformation function $\mathcal{F} : \mathbb{R}^D \rightarrow \mathbb{R}^M$, with $M < D$, such that for $z_i \leftarrow \mathcal{F}(x_i)$. Consider a pair of examples $(x_i, x_j)$ with a measured task-relevant perceptual similarity $\mathcal{E}_{\text{perceptual}}(x_i, x_j)$. Their Euclidean distance calculated in the feature space is more correlated to the perceptual similarity $z\in\mathcal{Z}$ than the one in the original space $x\in\mathcal{X}$. Formally, $\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| z_i - z_j \|_2^2 - \mathcal{E}_{\text{perceptual}}(x_i, x_j) \right|
+<\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| x_i - x_j \|_2^2 - \mathcal{E}_{\text{perceptual}}(x_i, x_j) \right|$. Here, $p(x_{\text{data}})$ denotes the data distribution.
+
+In this paper, we empirically support the proposition. As shown in the deep learning-based classification systems and latent diffusion models, the improved class separability and preserved semantic relationships in the feature space enhance the quality of generative data augmentation, too. 
+
+% However, to adapt these models to specific downstream tasks, fine-tuning on task-specific data is still required. In low-resource settings, this fine-tuning process remains vulnerable to the same data scarcity issues, often leading to models that generalize poorly to underrepresented classes or low-resource domains. 
+
+% To mitigate this, we propose a data augmentation strategy that generates synthetic samples for underrepresented classes. This helps balance the fine-tuning data, improves generalization to low-resource subsets, and allows the model to fully leverage the generalizable features learned by the foundation model.

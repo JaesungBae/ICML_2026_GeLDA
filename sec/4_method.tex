@@ -1,0 +1,69 @@
+\begin{wrapfigure}[17]{r}{0.4\textwidth}
+  \centering
+  \vspace{-0.35in}
+  \includegraphics[width=\linewidth]{figs/SER-pipeline.pdf}\vspace{-0.07in}
+  \caption{SER model architecture with an example of performing GeLDA in the $\mathcal{Z}^{(1)}$ space. $\mathcal{S}(\cdot)$ indicates the diffusion model trained to generate latent vectors, while $u(\kappa)$ represents the conditioning information about the target language $\kappa$.}
+  \label{fig:model}
+\end{wrapfigure}
+
+\section{Principles of Generative Latent Data Augmentation}
+\label{sec:principles}
+
+We assume that a reconstruction of the entire data distribution from only a few samples is infeasible due to the complexity of $p(x_{\text{data}})$ as well as the potential misrepresentation of the limited training data, which the generative models conditioned by the class labels \cite{openai_improved_ddpm} cannot easily overcome. Instead, GeLDA augments data in a latent embedding space $\mathcal{Z}$, extracted from a downstream model. While $\mathcal{Z}$ may still exhibit the class imbalance issue, 
+% In \cite{modals}, the authors assumed that if the neural network is learned properly, its latent space $\mathcal{Z}$ becomes mostly convex and isotropic. Similarly, 
+we can assume that the latent space $\mathcal{Z}$ is semantically more structured than $\mathcal{X}$, as it abstracts away low-level variability. In this section, we present three primary considerations in the proposed GeLDA method.
+
+\subsection{Downstream model to learn shared feature space}
+
+A powerful foundation model can provide a well-structured feature space $\mathcal{Z}$, transformed from the input data space $\mathcal{X}$, while it may still contain irrelevant information to the downstream task. As a remedy, a lightweight classifier can be trained on top of $\mathcal{Z}$ for adaptation to a specific downstream objective, such as SER. It helps suppress task-irrelevant components and provides more linear separability concerning the target labels. Figure~\ref{fig:model} illustrates such a task adapter with $L$ additional layers on top of the $\mathcal{Z}^{(0)}=\mathcal{Z}$ space: $y_i\approx\text{Softmax}\circ\mathcal{H}^{(L)}\circ\cdots\circ\mathcal{H}^{(1)}\circ\mathcal{G}(x_i)$.
+Each $l$-th layer yields a latent space $\mathcal{Z}^{(l)}$, reflecting progressively more abstraction of information for the downstream task. We can thus extend Proposition 1 and assume that generating vectors in $\mathcal{Z}^{(l)}$ space is easier than in $\mathcal{Z}^{(<l)}$ spaces.
+
+The task adapter can be trained from the entire dataset $x_i\sim\mathcal{D}$, but fine-tuning on a subset $\mathcal{D}^{(\kappa)}$ can sometimes improve the performance further, e.g., SER for a specific language $\kappa$ rather than a generic one. The faint contours for the two data distributions in Figure \ref{fig:low-resource-samples} present the ground-truth distribution of $\mathcal{D}^{(\kappa)}$. If the sample distribution of $\mathcal{D}^{(\kappa)}$ represents the ground-truth distribution faithfully, the model can be fine-tuned for the sub-problem with a simpler decision boundary. 
+
+\subsection{Conditioned generative data augmentation}
+When $\mathcal{D}^{(\kappa)}$ is not representative enough due to the small number of samples (crosses in Figure \ref{fig:low-resource-samples}), the GeLDA process $\mathcal{S}(\cdot)$ can synthesize more samples for that sub-domain $\kappa$ by being conditioned by the information about $\kappa$: $\bar{z}\sim\mathcal{S}(\mathcal{N}(\bm{0}, \bm{I}); u(\kappa))$.
+In the language-specific SER example, $u(\kappa)$ represents which language $\kappa\in\{1,\ldots,K\}$ the synthesized feature vectors $\bar{z}$ should belong to.
+
+The generative model is trained to respect it. For example, in the multilingual SER dataset, if there is a similar language $k'$ to the target low-resource language $\kappa$, GeLDA is trained to leverage it, e.g., $p(\mathcal{D}^{(k')})\approx\mathcal{S}(\mathcal{N}(\bm{0}, \bm{I}); \kappa)$, rather than creating language-agnostic samples. Figure \ref{fig:augmented} shows synthesized samples (dots) that follow another distribution from language $k'$ due to the similarity between $\kappa$ and $k'$, e.g., linguistic or cultural similarity of the two language groups. The resulting classifier, despite the difference from the ground-truth in Figure \ref{fig:low-resource-samples}, is still more reasonable and simpler than the multi-lingual model shown in Figure \ref{fig:input_dist}.
+
+
+% \vspace{0.5em}
+% \noindent \textbf{Proposition 4.1 (Formal).}
+% Let $f_\theta: \mathcal{X} \to \mathcal{Z}$ be a representation function such that $\dim(\mathcal{Z}) \ll \dim(\mathcal{X})$ and $I(h; y) \approx I(x; y)$. Then, modeling or generating synthetic samples in $\mathcal{Z}$ is more tractable than in $\mathcal{X}$ due to lower intrinsic dimensionality and abstraction from irrelevant input variability.
+% \vspace{0.5em}
+
+
+
+
+\subsection{On the choice of a proper latent representation layer} 
+Although more abstraction in the feature space could simplify the GeLDA task, there is a tradeoff when selecting a specific latent space $l$. For example, when $l$ is too close to $L$, the earlier layers of the network ($<l$) cannot be updated during training with the generated data (the first linear layer and earlier layers in Figure \ref{fig:model}), limiting the flexibility of the model during finetuning. Consequently, the effectiveness of data augmentation is reduced. 
+% Moreover, as $k$ increases, the region corresponding to a class in the $\mathcal{Z}_k$ becomes more isotropic and convex, and sometimes even collapses. In such cases, generative models have limited capacity to introduce meaningful diversity, further diminishing their utility for augmentation.
+Moreover, as $l$ increases, class representations in $\mathcal{Z}^{(l)}$ become more isotropic and convex, even collapsing into a single point or simplex shape, where the feature space’s ability to capture diversity diminishes~\cite{pmlr-v202-rangamani23a, Prevalence_of_neural_collapse}. This overly compressed or linearly separable feature space also limits the ability of GeLDA to introduce meaningful diversity. Conversely, if GeLDA is applied to a too early layer, the latent representations may be too noisy or unstable. Likewise, selecting the appropriate latent layer is critical for successful GeLDA. 
+
+
+% Rather than generating synthetic data directly in the input space $\mathcal{X}$—such as raw audio or spectrograms via text-to-speech (TTS) or voice conversion (VC)—we propose to generate data in the latent embedding space $\mathcal{Z}_0$ extracted from a pretrained foundation model. This strategy is especially valuable in low-resource settings, where high-fidelity generation in $\mathcal{X}$ is infeasible due to limited training data and computational cost.
+% while capturing general-purpose speech features learned by the foundation model. Finally, we can come up with the following proposition.
+
+
+% Based on Proposition 4.1, the latent space $\mathcal{Z}_0$ is semantically more structured than $\mathcal{X}$, as it abstracts away low-level variability (e.g., high-frequency information, background noise). while capturing general-purpose speech features learned by the foundation model. 
+% Although $\mathcal{Z}_0$ is a more structured feature space compared to $\mathcal{X}$, it may still contain information irrelevant to the specific target task. The foundation models' powerful performance in various downstream tasks prove this concept. A lightweight classifier placed on top of this latent space serves to filter out such irrelevant components and transform the representation into a more linearly separable space for the target downstream task.
+
+% In deep neural networks, we have choices of various latent spaces. Let's assume that there is a foundation model followed by lightweight classifiers as in Figure~\ref{fig:model}. If we assume that the foundation model is fixed and we don't have access to its implementation, we can extract vectors from three latent spaces $\mathcal{Z}_{k=\{1,2,3\}}$ (the temporal pooling layer is committed).
+
+\iffalse
+
+However, if we augment the data in the $\mathcal{Z}_k$ space where $k$ is too close to the output space, the problem is that we can not update the layers that are earlier than $k$. The role of earlier layers of neural networks is to extract higher-level information from input data, and by training them with larger amount of data increase their generalablity and improve the performance of the dataset. 
+Therefore, if we can not update the early layers of neural networks, the effectiveness of the DA will be decrease. Additionally, $\mathcal{Z}_k$ also becomes more isotropic and convex latent space as $k$ increases, which makes it more linear space, and also leads to the effect that the benefits of using generative models will become less. 
+
+% However, since $\mathcal{Z}_0$ is a feature space that well-adopted to various downstream tasks, we can infer it still has a irrelevant information to the target downstream task, and the light-weight classifier on top of this latent space is to remove the irrelevant information and transforming it to a more linearly separable latent space. As in figure~\ref{fig:model}, let's assume that we build a classifier with $k$ layers on top of $\mathcal{Z}_0$ space. Then, in each $k$-th layer, we have a latent space $\mathcal{Z}_k$ having a different level of concentration on the downstream task. Then, we can further extend Proposition 4.1 is also true for every $\mathcal{Z}_k$ space. 
+
+
+
+Our idea is to select different latent spaces with different level of the classifier layers, 
+To this end, we 
+has too rich information that can be used for various kinds of downstream tasks. However, since our goal is to augment lantent vector to improve specific downstream task, we can choose a better latent space. As the layers go deeper and closer to the output space, it becomes to loss other irrelevant information for the task but focusing more on the information that is relevant to the task, and make the embedding space more isotropic and convex. However, at the same time, 
+
+
+
+since the foundation model is trained on broad objectives across multiple tasks and languages, $\mathcal{Z}_0$ is not yet fully specialized for our downstream task of speech emotion recognition. This leaves room for lightweight, task-specific adaptation. Importantly, the lower dimensionality and reduced complexity of $\mathcal{Z}_0$ still make it more tractable for generative modeling than the raw input space. This motivates the following proposition.
+\fi

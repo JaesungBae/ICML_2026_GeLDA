@@ -1,6 +1,4 @@
 \begin{abstract}
-This paper presents \sys, a comprehensive template for academic papers. 
-We describe the design and implementation of this system, which provides 
-a foundation for creating well-formatted documents. Our evaluation demonstrates 
-the effectiveness of this approach in producing high-quality academic publications.
-\end{abstract}
+    Despite recent successes in data-rich settings, deep learning methods remain less effective in data-scarce scenarios common in many real-world applications. While foundation models trained on massive datasets demonstrate strong generalization by extracting general-purpose features, they still suffer from data scarcity during the fine-tuning phase on specific downstream tasks. To address this challenge, we propose a novel generative latent data augmentation (GeLDA) framework that leverages diffusion models to synthesize data in a task-specific learned latent space. Since this space is low-dimensional and concentrates on task-relevant information compared to the input space, GeLDA enables efficient and high-quality data generation. We propose to condition GeLDA with various auxiliary information about the sub-domain of the task, improving the efficacy of the augmented data. We further identify a trade-off in selecting the latent space for augmentation: early-layer features could be unstable or noisy, while too much abstraction near the output restricts the capacity of the remaining layers during finetuning. We validate GeLDA's broad effectiveness on two representative data-scarce scenarios: (a) multi-lingual speech emotion recognition for low-resource languages (3.7\% point improvement in unweighted average recall) (b) long-tail image classification with an improved tail-class accuracy by 8.1\% point. Code will be released upon acceptance.
+  \end{abstract}
+  

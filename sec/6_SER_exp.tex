@@ -1,0 +1,284 @@
+% \subsection{Multi-lingual SER for low-resource languages}
+
+% \subsection{Experiment setups}
+\subsection{Task definition and dataset}
+First, we demonstrate the effectiveness of our proposed GeLDA methods for SER in low-resource languages. In this setup, the training dataset $\mathcal{D}$ consists of the subsets $\mathcal{D}=\cup_{k=1}^K\mathcal{D}^{(k)}$ where $k$ is the language index. Each sample $x_i$ is associated with one of five emotion labels. For a low-resource language $\kappa$, we assume its samples $\mathcal{D}^{(\kappa)}$ only have the ``neutral'' emotion to simulate the real-world issue, where annotated emotional speech samples are hard to acquire.
+
+\begin{table*}{t}
+    \centering
+    \footnotesize
+    \vspace{-0.15in}
+    \caption{Summary of multi-lingual speech emotion dataset.}
+    % \vspace{-0.05in}
+    \begingroup
+\setlength{\tabcolsep}{3pt}
+\resizebox{.6\textwidth}{!}{  
+    \begin{tabular}{@{\hskip 1pt}l@{\hskip 1pt}r@{\hskip 1pt}r@{\hskip 1pt}r@{\hskip 1pt}r@{\hskip 1pt}r@{\hskip 2pt}|r@{}}
+        \toprule
+        \multicolumn{1}{c}{\textbf{Language}} & \multicolumn{1}{c}{\textbf{Angry}} & \multicolumn{1}{c}{\textbf{Happy}} & \multicolumn{1}{c}{\textbf{Neutral}} & \multicolumn{1}{c}{\textbf{Sad}} & \multicolumn{1}{c|}{\textbf{Surprise}} & \multicolumn{1}{c}{\textbf{Total}} \\ 
+        \midrule
+        Bangla \cite{subesco}& 1.1 h & 1.1 h & 1.1 h & 1.1 h & 1.1 h & 5.6 h \\ 
+        Chinese \cite{esd} & 2.6 h & 2.8 h & 3.2 h & 3.9 h & 3.2 h & 15.7 h \\ 
+        English \cite{esd,ravdess,samsemo} & 3.9 h & 5.4 h & 6.4 h & 3.7 h & 3.2 h & 22.5 h \\ 
+        French \cite{CaFE} & 0.2 h & 0.2 h & 0.0 h & 0.2 h & 0.2 h & 0.7 h \\ 
+        German \cite{EmoDB, samsemo} & 1.0 h & 1.3 h & 2.3 h & 0.5 h & 0.2 h & 5.3 h \\ 
+        Italian \cite{italian1} & 0.8 h & 0.8 h & 0.9 h & 1.0 h & 0.9 h & 4.3 h \\ 
+        Korean \cite{samsemo, kesdy18} & 0.5 h & 1.1 h & 3.0 h & 0.6 h & 0.1 h & 5.4 h \\ 
+        Polish \cite{samsemo} & 1.5 h & 1.9 h & 9.3 h & 0.7 h & 0.2 h & 13.6 h \\ 
+        Spanish \cite{samsemo} & 0.3 h & 0.9 h & 2.3 h & 0.3 h & 0.1 h & 3.8 h \\ 
+        \midrule
+        Total & 11.9 h & 15.4 h & 28.4 h & 12.1 h & 9.2 h & 76.9 h \\
+        \bottomrule
+    \end{tabular}
+    }
+    \endgroup
+    \label{tab:ser_dataset}
+    \vspace{-0.2in}
+\end{table*}
+
+We collect a multilingual speech emotion dataset from various sources, whose class and language distributions are summarized in Table \ref{tab:ser_dataset} with citations, showcasing a heavy but common imbalance issue across emotion labels and languages. 
+% , which also aligns with our problem setting. 
+Since we collect data from multiple sources, some emotion categories are missing. We focus on the five most common emotions, while discarding samples that belong to other than these five. All the languages except English, Chinese, and French are selected as the target low-resource languages $\kappa$. We repeat the experiments for those six target languages and report the results from six language-specific SER systems. To simulate data scarcity, when a language is selected as the low-resource target, we eliminate all its samples except those in the neutral class, repurposing $\mathcal{D}^{(\kappa)}$ into $\tilde{\mathcal{D}}^{(\kappa)}=\{(x_i, y_i)\mid y_i=\text{``neutral''}\}$. 10\% of the dataset is set as a validation and test sets, respectively, and the rest is used for training. The total number of speech samples is 67,637, and the average duration is 4 seconds.
+
+\subsection{Implementation details and evaluation metrics}
+We adopt three pretrained foundation models: XLSR \cite{xlsr} and small and large Whisper models \cite{whisper}. 
+% Following the multi-task learning approach proposed in \cite{gender_ref1, gender_ref2}, we add a linear layer on top of the final model representations to predict gender information, which serves as an auxiliary task to improve emotion recognition performance. 
+During the multi-lingual SER training (the first stage), the task adapter is trained from the entire training set except for the target language: $\mathcal{D}^{\setminus \kappa}=\cup_{k \neq \kappa} \mathcal{D}^{(k)}$. 
+% We adopt a simple U-Net-based architecture for the diffusion model. During inference, we utilize the DDIM~\cite{ddim} with CFG++~\cite{cfgpp} for improved sampling quality.
+% We set the guidance scale to $\lambda = 0.25$ and the DDIM step size to 20. Additional analyses on the effects of varying the DDIM step size and guidance scale are provided in Appendix~\ref{apdx:ddim_hyperparam}.
+The diffusion model is trained with the combination $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$, i.e., all other languages and neutral examples from the target language. It is conditioned with emotion embedding, gender embedding, and the sampled neutral utterance embedding $z^{(l)}\in\tilde{\mathcal{D}}^{(\kappa)}$, when the GeLDA is operated in $\mathcal{Z}^{(l)}$ space. 
+% For conditioning, a linear layer aggregates emotion embedding, gender embedding, and the sampled neutral utterance embedding $z\in\tilde{\mathcal{D}}^{(\kappa)}$ to form the final condition vector for the CFG process. 
+The trained diffusion model generates new feature vectors $\bar{z}$ for all non-neutral emotions to improve balance in $\tilde{\mathcal{D}}^{(\kappa)}$. The resulting synthetic dataset is denoted as $\bar{\mathcal{D}}^{(\kappa)}$. Finally, in the fine-tuning stage (the second training stage), the task adapter layers later than $>l$ are updated using neutral examples $\tilde{\mathcal{D}}^{(\kappa)}$, synthesized non-neutral examples $\bar{\mathcal{D}}^{(\kappa)}$, and $\mathcal{D}^{\setminus \kappa}$ that are all in the $\mathcal{Z}^{(l)}$ space. Additional implementation details can be found in Appendix~\ref{apdx:implementation_details}.
+
+Due to the highly imbalanced nature of the emotional speech dataset, SER models are often evaluated with unweighted average (UA) recall, together with weighted average (WA) recall \cite{interspeech_emotion_challenge}. UA metric assesses per-emotion recall first and then averages them to equally account for all the emotions, preventing the domination by the most popular class. Therefore, the UA is often a better indicator of the system’s accuracy \cite{interspeech_emotion_challenge}. WA is calculated as a top-1 accuracy. 
+
+\subsection{Comparison models} 
+For the comparison models, we first build three baseline systems original data (i.e., with no augmentation): $\mathcal{D}^{\setminus \kappa}$ (missing the target language), $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$ (including the neutral class from the target language), and $\mathcal{D}$ (the entire multi-lingual dataset for the \textit{oracle} upper-bound performance). 
+
+
+As another set of baselines, we use state-of-the-art multilingual zero-shot TTS (XTTS~\cite{xtts}\footnote{\url{https://huggingface.co/coqui/XTTS-v2}}) and speech translation systems (SeamlessM4T-Large and Seamless Expressive~\cite{seamless}) to synthesize new speech signals in the input space $\mathcal{X}$.
+% , bearing with the limitation in fine-tuning them with our emotional speech dataset. This is due to the missing text scripts in our dataset, which are critical in training TTS systems. 
+These systems imitate speaking style and speaker identity of a provided speech prompt. For this, we randomly select English speech with the target emotion serve as prompts.
+% XTTS \cite{xtts} is a zero-shot TTS system that can imitate the input speech prompt's speaking style and speaker identity, i.e., $(x_i, y_i)\sim\mathcal{D}^{\setminus \kappa}$. From \cite{seamless}, we adopt SeamlessM4T-Large and SeamlessExpressive models. SeamlessM4T-Large is a speech-to-speech translation model trained with a massive amount of multilingual dataset, and SeamlessExpressive is a version that focuses more on expressiveness by adopting expressive speech datasets. 
+These models require over 20 K hours of training data and 450 M parameters, making it difficult to acquire such models for low-resource languages. In contrast, the proposed GeLDA only requires 73 hours of data and 15 M parameters, demonstrating much greater efficiency. Additional efficiency comparison is provided in Appendix~\ref{apdx:efficiency_comparison} Table \ref{tab:compare2}. % A summary of the comparison models and GeLDA’s configuration 
+% , highlighting the significantly improved efficiency of our proposed GeLDA model compared to input space DA methods. 
+Note that XTTS does not support Bangla, and SeamlessExpressive does not support Bangla, Korean, and Polish. Therefore, these unsupported languages are excluded when calculating the average performance for the corresponding models.
+% each model.
+
+
+% As another set of baselines, we use state-of-the-art multilingual zero-shot TTS \cite{xtts} and speech translation systems \cite{seamless} to synthesize new speech signals in the input space $\mathcal{X}$, bearing with the limitation in fine-tuning them with our emotional speech dataset. This is due to the missing text scripts in our dataset, which are critical in training TTS systems. 
+% % We opt not to retrain open-source TTS systems as they tend not to support multiple languages, nor as good as the SOTA TTS systems regarding speech quality. 
+% XTTS \cite{xtts}\footnote{\url{https://huggingface.co/coqui/XTTS-v2}} is a zero-shot TTS system that can imitate the input speech prompt's speaking style and speaker identity, i.e., $(x_i, y_i)\sim\mathcal{D}^{\setminus \kappa}$. From \cite{seamless}, we adopt SeamlessM4T-Large and SeamlessExpressive models. SeamlessM4T-Large is a speech-to-speech translation model trained with a massive amount of multilingual dataset, and SeamlessExpressive is a version that focuses more on expressiveness by adopting expressive speech datasets. 
+% These models require over 20 K hours of training data and 450 M parameters, making it difficult to acquire such models for low-resource languages. In contrast, the proposed GeLDA only requires 73 hours of data and 15 M parameters, demonstrating significantly improved efficiency. A summary is provided in Appendix~\ref{apdx:efficiency_comparison} Table \ref{tab:compare2}. % of the comparison models and GeLDA’s configuration 
+% % , highlighting the significantly improved efficiency of our proposed GeLDA model compared to input space DA methods. 
+% Note that XTTS does not support Bangla, and SeamlessExpressive does not support Bangla, Korean, and Polish. Therefore, these unsupported languages are excluded when calculating the average performance for each model. \todo{this paragraph is TMI although I don't want to remove it completely.}
+
+In addition to the data augmentation in $\mathcal{X}$, we also implement simple linear transformation and noise addition-based DA in $\mathcal{Z}$. Similar to the Latent Filling~\cite{latent_filling} method, we apply interpolation between the existing latent samples that share the same emotions and genders, and Gaussian noise addition. We used the same hyperparameter settings as in \cite{latent_filling}.
+% the linear transformation and noise addition data augmentation methods working in $\mathcal{Z}$. Following the methods proposed in \cite{latent_filling}, 
+
+
+\begin{table*}
+\caption{Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
+    \label{tab:result-main}
+    \centering
+    \footnotesize
+    \resizebox{.9\textwidth}{!}{
+    \begin{tabular}{lccccccccccccc}
+Baseline (pre-trained) & 100 & 0.88 & 0.66 & 0.68 & 0.79 & 0.81 & 0.75 & 0.72 & 0.7693 & 0.7784 & 0.7815 & 0.7646 & 36 \\
+seamless\_m4t\_h0 & 200 & 0.8512 & 0.6833 & 0.5744 & 0.7624 & 0.7314 & 0.7195 & 0.7150 & 0.7318 & 0.7344 & 0.7352 & 0.7232 & 24 \\
+seamless\_expressive\_h0 & 200 & 0.8389 & 0.7011 & 0.6700 & 0.7767 & 0.8989 & 0.7600 & 0.7033 & 0.7721 & 0.7810 & 0.7815 & 0.7709 & 9 \\
+seamless\_m4t\_bootstrap\_h0 & 200 & 0.8713 & 0.7047 & 0.6056 & 0.7633 & 0.7610 & 0.7190 & 0.7250 & 0.7463 & 0.7476 & 0.7478 & 0.7365 & 24 \\
+seamless\_expressive\_bootstrap\_h0 & 200 & 0.8422 & 0.7211 & 0.7422 & 0.8078 & 0.8900 & 0.7644 & 0.7167 & 0.7929 & 0.7987 & 0.7987 & 0.7950 & 9 \\
+Latent Filling\_h0 & 200 & 0.8964 & 0.7167 & 0.6610 & 0.8255 & 0.8317 & 0.7773 & 0.7575 & 0.7939 & 0.8057 & 0.8062 & 0.7877 & 36 \\ 
+Latent Filling\_h1 & 200 & 0.8911 & 0.7000 & 0.7050 & 0.8127 & 0.8127 & 0.7627 & 0.7525 & 0.7867 & 0.7965 & 0.7980 & 0.7810 & 36 \\ 
+Latent Filling\_h2 & 200 & 0.8903 & 0.6762 & 0.6993 & 0.8030 & 0.8120 & 0.7776 & 0.7433 & 0.7835 & 0.7925 & 0.7939 & 0.7773 & 36 \\
+ours\_baseline\_finetune & 200 & 0.8830 & 0.6903 & 0.6696 & 0.7912 & 0.8087 & 0.7622 & 0.7184 & 0.7729 & 0.7829 & 0.7850 & 0.7675 & 36 \\
+ours\_h0 & 200 & 0.8858 & 0.6875 & 0.7332 & 0.8292 & 0.8436 & 0.7906 & 0.7192 & 0.8002 & 0.8039 & 0.8044 & 0.7892 & 36 \\
+ours\_h1 & 200 & 0.8553 & 0.6956 & 0.7248 & 0.8063 & 0.8021 & 0.7598 & 0.7310 & 0.7800 & 0.7821 & 0.7830 & 0.7673 & 36 \\
+ours\_h2 & 200 & 0.8782 & 0.6757 & 0.6828 & 0.7868 & 0.8042 & 0.7507 & 0.7249 & 0.7715 & 0.7791 & 0.7799 & 0.7625 & 36 \\
+ours\_bootstrap\_h0 & 200 & 0.9040 & 0.7075 & 0.7395 & 0.8407 & 0.8262 & 0.8078 & 0.7062 & 0.8088 & 0.8116 & 0.8116 & 0.7958 & 36 \\
+ours\_bootstrap\_h1 & 200 & 0.8700 & 0.7025 & 0.7278 & 0.8050 & 0.8087 & 0.7787 & 0.7590 & 0.7878 & 0.7910 & 0.7917 & 0.7768 & 36 \\
+ours\_bootstrap\_h2 & 200 & 0.8843 & 0.6814 & 0.6860 & 0.7952 & 0.8089 & 0.7625 & 0.7317 & 0.7770 & 0.7847 & 0.7855 & 0.7684 & 36 \\
+\end{tabular}
+\end{table*}
+
+\begin{table}[t]
+    \caption{Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
+    \label{tab:result-main}
+    \centering
+    \footnotesize
+    \resizebox{.9\textwidth}{!}{
+    \begin{tabular}{lccccccrr}
+        \toprule
+        \multirow{2}{*}{\textbf{Model}} & \multirow{2}{*}{\textbf{DA}} & \multicolumn{5}{c}{\textbf{Per emotion recall (\%)}} & 
+        \multirow{2}{*}{\textbf{UA (\%)}} & \multirow{2}{*}{\textbf{WA (\%)}} \\ 
+        \cline{3-7}
+        ~ & ~ &\textbf{Angry} & \textbf{Happy} & \textbf{Neutral} & \textbf{Sad} & \multicolumn{1}{c}{\textbf{Surprise}} & ~ & ~\\
+        \midrule
+        \rowcolor{gray!20}\multicolumn{9}{c}{Backbone foundation model: XLSR} \\
+        Baseline ($\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$) & - & 41.97 & 41.80 & 98.00 & 35.00 & 20.10 & 47.37 & 65.07 \\
+        Baseline ($\mathcal{D}^{\setminus \kappa}$) & - & 61.79 & 51.78 & 60.60 & 58.06 & 24.57 & 51.36 & 59.27\\ 
+        \hline
+        XTTS* & ~ &47.48 & 44.64 & 87.78 & 35.54 & 24.52 & 47.99 
+ & \textbf{64.89}\\ 
+        Seamless M4T v2 & $\mathcal{X}$ & 45.77 & 39.60 & 90.29 & 37.99 & 20.18 & 46.76 & 62.13\\ 
+        Seamless Expressive* & ~ & 46.98 & 50.90 & 82.55 & 47.55 & 17.56 & 49.11 & 60.62\\
+        \hline
+        ~ & $\mathcal{Z}^{(0)}$ & 54.24 & 56.55 & 75.77 & 52.6 & 23.51 & 52.54 & 63.44 \\ 
+        Latent Filling & $\mathcal{Z}^{(1)}$ &55.48 & 58.55 & 61.49 & 53.36 & 26.08 & 50.99 & 59.91\\ 
+        ~ & $\mathcal{Z}^{(2)}$ & 59.31 & 57.43 & 60.17 & 55.48 & 24.57 & 51.39 & 59.64 \\ 
+        \hline
+        ~ & $\mathcal{Z}^{(0)}$ & 51.37 & 44.81 & 90.98 & 41.07 & 23.68 & 50.38 & \underline{64.69}\\ 
+        GeLDA (ours) & $\mathcal{Z}^{(1)}$ & 60.71 & 58.75 & 56.00 & 57.22 & 35.83 & \textbf{53.70} & 59.62\\ 
+        ~ & $\mathcal{Z}^{(2)}$ & 60.51 & 56.95 & 61.22 & 57.87 & 28.33 & \underline{52.97} & 59.93\\ 
+        % ~ & Proposed - DDIM & 44.79 & 39.42 & 96.94 & 50.52 & 57.27 & 57.79 & 57.62 \\ 
+        % ~ & Proposed - DDPM & 46.88 & 46.15 & 97.96 & 44.33 & 52.73 & 57.61 & 57.43 \\ 
+        % ~ & Proposed - DDIM CFG++ & 48.96 & 50.96 & 92.86 & 50.52 & 62.73 & 61.20 & 61.19 \\ 
+        % ~ & Proposed - DDIM CFG++ (x5) & 50.00 & 52.88 & 92.86 & 53.61 & 70.00 & 63.87 & 63.96 \\ 
+        \hline
+        Baseline ($\mathcal{D}$)& - & 75.52 & 59.97 & 79.20 & 68.83 & 38.66 & 64.43 & 74.19\\ 
+        % ~ & + Fine-tuned (All) &  \\ 
+        
+        \midrule
+        % \rowcolor{gray!20}\multicolumn{9}{c}{Backbone foundation model: Whisper-small} \\
+        % Baseline ($\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$) & - & 35.70 & 32.32 & 99.71 & 23.65 & 16.06 & 41.48 & 60.85 \\
+        % Baseline ($\mathcal{D}^{\setminus \kappa}$)  & - &61.26 & 59.77 & 65.54 & 58.29 & 27.48 & 54.47 & 63.35\\
+        % \hline
+        % XTTS* & ~ & 41.57 & 35.15 & 95.36 & 31.76 & 17.81 & 44.33 & \underline{65.89}\\
+        % Seamless M4T v2 & $\mathcal{X}$ & 42.12 & 34.23 & 94.50 & 28.70 & 16.23 & 43.16 & 60.98\\
+        % Seamless Expressive* & ~ & 59.03 & 45.91 & 83.45 & 51.67 & 28.89 & 53.79 & 64.57\\
+        % \hline
+        % ~ & $\mathcal{Z}^{(0)}$ & 45.31 & 45.16 & 94.85 & 37.95 & 19.78 & 48.61 & 64.45\\
+        % Latent Filling & $\mathcal{Z}^{(1)}$ & 55.39 & 56.7 & 82.65 & 53.16 & 24.84 & 54.55 & \textbf{67.09}\\
+        % ~ & $\mathcal{Z}^{(2)}$ & 60.57 & 59.15 & 69.44 & 57.41 & 27.24 & 54.76 & 63.89\\
+        % \hline
+        % ~ & $\mathcal{Z}^{(0)}$ & 44.79 & 34.34 & 95.17 & 29.70 & 21.64 & 45.12 & 63.60\\
+        % Proposed &$\mathcal{Z}^{(1)}$& 58.02 & 44.54 & 79.64 & 59.07 & 33.32 & \underline{54.92} & 65.84\\
+        % ~ & $\mathcal{Z}^{(2)}$& 60.92 & 57.95 & 69.49 & 61.38 & 35.74 & \textbf{57.09} & 64.24\\
+        % \hline
+        % Baseline ($\mathcal{D}$)& - & 77.22 & 68.43 & 86.06 & 69.38 & 36.28 & 67.47 & 78.91\\
+        % \midrule
+
+        \rowcolor{gray!20}\multicolumn{9}{c}{Backbone foundation model: Whisper-large} \\
+        Baseline ($\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$) & - & 45.01 & 39.61 & 98.97 & 36.25 & 24.81 & 48.93 & 66.82\\
+        Baseline ($\mathcal{D}^{\setminus \kappa}$)  & - &70.39 & 67.98 & 68.28 & 74.08 & 34.16 & 62.98 & 68.96\\
+        \hline
+        XTTS* & ~ & 41.87 & 43.88 & 93.94 & 41.19 & 26.95 & 49.57 & 68.91 \\
+        Seamless M4T v2 & $\mathcal{X}$ & 51.02 & 49.61 & 94.36 & 40.40 & 29.04 & 52.89 & 69.60 \\
+        Seamless Expressive* & ~ & 57.05 & 57.32 & 88.53 & 51.33 & 32.79 & 57.40 & 68.60 \\
+        \hline
+        ~ & $\mathcal{Z}^{(0)}$& 59.39 & 58.23 & 93.13 & 56.85 & 33.11 & 60.14 & \textbf{73.56} \\
+        Latent Filling & $\mathcal{Z}^{(1)}$ & 69.06 & 68.03 & 78.00 & 70.92 & 34.05 & 64.01 & \underline{73.35} \\
+        ~ & $\mathcal{Z}^{(2)}$& 70.14 & 68.64 & 69.69 & 73.73 & 34.35 & 63.31 & 69.57\\
+        \hline
+        ~ & $\mathcal{Z}^{(0)}$ & 54.91 & 51.25 & 96.13 & 41.79 & 28.75 & 54.57 & 71.18\\
+        GeLDA (ours) & $\mathcal{Z}^{(1)}$ & 72.12 & 63.07 & 79.17 & 70.01 & 43.09 & \textbf{65.49} & 72.36 \\
+        ~ & $\mathcal{Z}^{(2)}$  & 69.96 & 65.85 & 70.23 & 72.93 & 41.56 & \underline{64.11} & 69.05\\
+        \hline
+        ~ & $\mathcal{Z}^{(0)}$ & 72.21 & 66.33 & 84.59 & 64.82 & 36.56 & 64.90 & \textbf{73.79}\\
+        GeLDA $\times 20$ (ours) & $\mathcal{Z}^{(1)}$  & 71.78 & 68.16 & 70.12 & 74.62 & 48.72 & \textbf{66.68} & 70.78\\
+        ~ & $\mathcal{Z}^{(2)}$ & 69.97 & 67.43 & 69.61 & 71.86 & 42.95 & 64.36 & 69.16\\
+        
+        % ~ & Proposed - DDIM CFG++  & 41.67 & 56.73 & 92.86 & 65.98 & 68.18 & 65.08 & 65.15 \\
+        \hline
+        Baseline ($\mathcal{D}$) & - & 83.53 & 74.22 & 84.98 & 76.54 & 44.72 & 72.80 & 81.41\\
+        % ~ & + Finetuned (All) & 84.38 & 76.50 & 80.80 & 79.94 & 56.57 & 75.64 & 79.66\\
+        
+        \bottomrule
+    \end{tabular}
+    }
+\end{table}
+
+
+\subsection{Results}
+Table~\ref{tab:result-main} presents the average results across six target languages. Results are divided into two parts based on the two foundation models used: XLSR and Whisper-large. 
+% Since UA better reflects performance across all emotions~\cite{}, we focus on UA in our analysis.
+% The average results of multi-lingual SER models with six target languages are in Table~\ref {tab:result-main}. Please note that we are focusing more on UA, since it is well representing metrics for overall emotional performance. 
+The baselines trained with $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$ perform the worst in terms of UA due to the bias toward neutral emotion in the target language $\tilde{\mathcal{D}}^{(\kappa)}$. 
+% Similarly, if a data augmentation method shows high accuracy on neutral emotion but poor accuracy on other emotions, it indicates that the augmented data fails to represent non-neutral emotions effectively. 
+$\mathcal{D}^{\setminus \kappa}$ represents a zero-shot condition, i.e., language $\kappa$ is missing entirely.  
+% The baseline model trained with $\mathcal{S}_\ell$ performs the worst for all foundation models, and this is because when the systems are only trained with neutral emotion for target languages, the results are highly biased to neutral emotion. Similarly, in the evaluation for the data augmentation methods, if the neutral emotion's accuracy is relatively higher than other emotions, we can interpret it as the augmented data does not effectively represent the other emotions correctly, and the systems are biased to neutral emotions during fine-tuning. The baseline model with $\mathcal{S}$ dataset can be interpreted as a zero-shot performance of the SER systems, since they never see the target language's speech samples during training. 
+
+Applying input space DA does not bring performance improvement. We attribute this to the limited emotional expressiveness of synthetic speech. Among these, SeamlessExpressive achieves the best results, highlighting the importance of expressive generation. However, all TTS models fail to improve the class imbalance (e.g., poor accuracy in ``surprise'').
+% When we applied input space data augmentation methods, the performance deteriorated for all the foundation models. We believe that this is because of the artificial noises introduced by generative models, and they are unable to generate speech's emotion properly. Among the three of them, Seamless Expressive models perform the best, highlighting the importance of the expressiveness of the generated speech. We believe that using a speech generation model with better expresses the emotional speech will improve the performance, but it is worth noting that for low-resource languages, it is problematic to acquire it. 
+Simple latent DA, Latent Filling, also fails to improve upon the zero-shot baseline ($\mathcal{D}^{\setminus \kappa}$), although it outperforms TTS-based DA, implying a well-defined latent space is effective for DA.
+% For the latent space data augmentation methods with simple statistical-based methods, the performance is on par with zero-shot baseline systems ($\mathcal{S}$) for XLSR and Whisper-small backbone foundation models, while it improves the performance by 1\% for the Whisper-large model. For the statistical-based latent filling to be effective, a well-learned latent space is necessary.
+
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{figs2/tsne_visualization_wl_ba_20_0.25_embeddings.pdf}
+  \caption{t-SNE visualization of the Bangla language test set and the augmented latent vectors in different latent spaces. Circles represent GT data, while crosses represent data generated by GeLDA.}
+  \label{fig:result-embedding-bangla}
+\end{figure}
+
+
+With our proposed GeLDA method, UA improves by 2.34\% and 2.51\% points for XLS and Whisper-large, respectively. Given the upper bound improvement by using oracle data $\mathcal{D}$ is 9.82\% for the Whisper-large backbone model, these improvements are substantial. Among different latent spaces, augmentation at $\mathcal{Z}^{(1)}$ consistently outperforms others, revealing the tradeoff in choosing the right latent space.
+Figure~\ref{fig:result-embedding-bangla} shows t-SNE plots of ground-truth (GT) test embeddings and generated vectors in Bangla. Augmentation at $\mathcal{Z}^{(0)}$ produces samples far from the GT distribution, likely due to the irrelevant information in the low-level feature space. However, augmented data at $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$ show better harmonization with the GT embeddings.
+Comparing $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$, although GeLDA appears to be more successful in $\mathcal{Z}^{(2)}$, it limits the following fine-tuning process's capability.   
+% However, as shown in Figure~\ref{fig:result-z-bangla}, when both are projected into the same $\mathcal{Z}^{(2)}$ space after fine-tuning, the augmentation in the $\mathcal{Z}^{(1)}$ space exhibit better clustering by emotion.
+
+
+% However, when it is compared them in the same $\mathcal{Z}^{(2)}$ space in Figure~\ref{fig:result-z-bangla} after fine-tuning, $\mathcal{Z}^{(1)}$ case is more clusterable depend on the emotions.
+
+
+% Further, Figure~\ref{fig:result-z-bangla} shows the effect of fine-tuning on $\mathcal{Z}^{(2)}$ space. While augmentation at $\mathcal{Z}^{(2)}$ appears well-aligned before fine-tuning, it cannot influence earlier layers. In contrast, augmenting at $\mathcal{Z}^{(1)}$ enables earlier layers to adapt, resulting in more clustered emotion representations after fine-tuning.
+% 
+% With our proposed generative latent space data augmentation, the UA improves 2.35\%, 2.62\%, and 2.51\% for XLSR, Whisper-small, and Whisper-large backbone models, respectively. Especially considering that the gap between the upper bound and the baseline model is 9.82\%, our proposed method's improvement is significant. Comparing different latent space locations, $\mathcal{Z}^{(1)}$ performs the best for the XLSR and  Whisper-large foundation model. In Figure~\ref{fig:result-embedding-bangla}, the t-SNE plot of the test ground-truth embedding and generated latent vector  Whisper-large model backbone for the Bangla language can be found. We can observe that at $\mathcal{Z}^{(0)}$ space, the generated data and GT data have different properties and can be separable. We believe that this is because the $\mathcal{Z}^{(0)}$ still contains rich information that is not relevant to the target task, and might be a burden to synthesize them with our simple diffusion-based generative models. However, the generated embeddings are well harmonized with GT embeddings in $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$. 
+
+% the layer before the $\mathcal{Z}^{(2)}$ space, but when we augment in $\mathcal{Z}^{(2)}$, we cannot update any layers before that.
+
+In summary, the proposed GeLDA method can significantly improve the language-specific SER results by using augmented data with a matching language label.  More detailed results on each language can be found in Appendix \ref{apdx:each_language}. Additional SER results with Whisper-small, visualization of the augmented features before and after fine-tuning, and language-agnostic GeLDA for multilingual SER are also presented in \ref{app:additional_ser}.
+
+% $\mathcal{Z}^{(2)}$ looks more separable than $\mathcal{Z}^{(1)}$ in Figure~\ref{fig:result-aug}. This is because $\mathcal{Z}^{(2)}$ space is a space right before the output space, therefore, the embeddings space should be linearly separable
+
+
+\iffalse
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[b]{0.28\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figs/uar_iter.png}
+  \end{minipage}
+  % \hspace{0.03\linewidth}
+  % \begin{minipage}[b]{0.24\linewidth}
+  %   \centering
+  %   \includegraphics[width=\linewidth]{figs/WA_iter.png}
+  % \end{minipage}
+  % \hspace{0.03\linewidth}
+  \begin{minipage}[b]{0.28\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figs/neutral_iter.png}
+  \end{minipage}
+  % \hspace{0.03\linewidth}
+  \begin{minipage}[b]{0.40\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figs/others_iter.png}
+  \end{minipage}
+  \caption{Trend graph as the number of fine-tuning iterations increases with different augmented latent vector locations. (Left) UA, (middle) accuracy of neutral emotion, (right) average accuracy of non-neutral emotions. }
+  \label{fig:result-iter}
+\end{figure}
+\fi
+
+% \vspace{-10pt}
+
+
+
+  % (Left) UA, (middle) accuracy on neutral emotion, and (right) average accuracy on non-neutral emotions.
+
+
+
+\paragraph{Effect of additional data augmentation}
+One of the biggest strengths of data augmentation is that we can generate an unlimited amount of data. To explore the effectiveness of additional data augmentation, we generate latent vectors 20 times more. The results of the case of Whisper-large backbone are described in Table~\ref{tab:result-main} as ``GeLDA $\times$ 20''. The additional data introduces an additional 1.19\% point, although its efficacy saturates around that point. 
+% % , and the trend graphs can be found in Figure~\ref{fig:result-aug}. For $\mathcal{Z}^{(1)}$ space, the UA improves additional 1.19\%, while for $\mathcal{Z}^{(2)}$ space, the performance doesn't improve significantly, but for $\mathcal{Z}^{(0)}$ space, the UA improves by 10.33\%. \todo{why?}
+
+% \begin{wrapfigure}{r}{0.35\textwidth}
+%   \centering
+%   \vspace{-0.2in}
+%   \includegraphics[width=1.0\linewidth]{figs2/uar_iter_x10.pdf}
+%   \caption{UA trends of the Whisper-large backbone model as the number of augmented samples increases.}
+%   \vspace{-25pt}
+%   \label{fig:result-aug}
+% \end{wrapfigure}
+    
+

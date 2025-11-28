@@ -1,0 +1,85 @@
+\subsection{Experiment setup}
+We also demonstrate the effectiveness of GeLDA on ImageNet-LT~\cite{imagenetlt} to improve its imbalance. It is a long-tailed image classification dataset derived from ImageNet-2012~\cite{imagenet_orig}, consisting of 1,000 categories with 186.3K images. 
+% The training split includes 115.8K images from 5 to 1,280 images per class, while the balanced test split follows the original ImageNet.
+Performance is reported on head (>100), medium (20–100), and tail (<20) class splits to reflect the challenges of long-tailed learning. Our goal is to achieve high accuracy in the tail subset while preserving the performance of the head and medium subsets.
+% In this setup, the training dataset $\mathcal{S}$ consists of three subset of labeled image dataset depend on the number of their images per label; head, medium, tail subsets. 
+% $D_i=\{(x_n, y_n) \mid n=1,2,\ldots,N_i\}$ where $x$ and $y$ are image and 
+
+% \paragraph{ImageNetLT dataset}
+
+% \paragraph{Implementation details} 
+We adopt a pre-trained foundation model from CLIP~\cite{clip} ViT-B/16. For the diffusion model conditioning, we use latent vectors both from image and text embeddings $z_\text{img}$ and $z_\text{txt}$, that share the same target image label $y$. By doing so, GeLDA ensures each class has at least 100 examples. Besides these, all other experiment settings are the same as those of the multilingual SER task. 
+
+% CLIP~\cite{clip} shows remarkable zero-shot image classification performance~\cite{clip_vqa}, and 
+% We first report the zero-shot performance of CLIP as a reference. For the baseline model, we train the task adopter using the ImageNetLT dataset. Previous works on imbalanced image classification tasks can be broadly categorized into three groups: (1) Training from scratch, which uses the ViT-B architecture without leveraging pre-trained weights~\cite{learning_imbalanced_data_with_vision_transformers, DeiT-LT}; (2) Fine-tuning pre-trained weights, which starts with pre-trained ViT-B weights and updates the entire model during fine-tuning~\cite{ballad, The_equalization_loss}; and (3) Adapter-based fine-tuning, which keeps most of the pre-trained ViT-B frozen and introduces additional parameters (adapters) or updates a small part of them during fine-tuning~\cite{lift}. In contrast, our approach utilizes the pre-trained weights of the foundation model without modifying or updating the model itself during adaptation. For evaluation, we adopt the UA and WA metrics, consistent with the SER task.
+
+
+% First, share the ViT-B architecture, but do not use the pre-trained weights and train it from scratch~\cite{learning_imbalanced_data_with_vision_transformers, DeiT-LT}. Second, use the pre-trained weights and update the ViT-B during fine-tuning~\cite{ballad, The_equalization_loss}. Last, use the pre-trained weights, but in the fine-tuned stage, adopt additional weights aside the ViT-B layer~\cite{lift}. However, our method aims to use the pre-trained weights of the foundation model, but assumes that we do not need to modify the foundation model at all. For the evaluation metrics, we also adopted the same evaluation metrics, UA and WA, from the SER task.
+
+\begin{table}[t]
+\centering
+    \footnotesize
+    \caption{Results on the ImageNet-LT dataset, with all models using ViT-B/16 as the backbone. A circle in the \textbf{pre-train} column indicates the use of CLIP pre-trained weights. A circle in the \textbf{full fine-tune} column indicates that the model fine-tunes the backbone. A triangle indicates the use of an additional adaptation block to the foundation model. 
+    % In contrast, our method requires no access to the foundation model.
+    }
+    \centering
+    \footnotesize
+    \resizebox{0.9\textwidth}{!}{
+    \begin{tabular}{lccccccrr}
+        \toprule
+        \multicolumn{1}{c}{\textbf{Model}} & 
+        \multicolumn{1}{c}{\textbf{DA}} & \multicolumn{1}{c}{\textbf{Pre-train}} & \multicolumn{1}{c}{\textbf{Full fine-tune}} & \multicolumn{1}{c}{\textbf{Head} (\%)} & \multicolumn{1}{c}{\textbf{Medium} (\%)} & \multicolumn{1}{c}{\textbf{Tail} (\%)} & 
+        \multicolumn{1}{c}{\textbf{UA} (\%)} &
+        \multicolumn{1}{c}{\textbf{WA} (\%)}\\
+        \midrule
+        % ViT~\cite{vit} & - & $\times$ & $\times$ & 50.5 & 23.5 & 6.9 & 27.0 & 31.6 \\
+LiVT~\cite{learning_imbalanced_data_with_vision_transformers} & - & $\times$  & $\times$ & 76.4 & 69.7 & 42.7 & 62.9& 63.8 \\
+DeiT-LT \cite{DeiT-LT} & - & $\times$  & $\times$ & 66.6 & 58.3 & 40.0 & 55.0 & 59.1 \\
+LIFT~\cite{lift} & - & $\bigcirc$ & $\triangle$ & 80.2 & 76.1 & 71.5 & 75.9 & 77.0 \\
+BALLAD~\cite{ballad} & - & $\bigcirc$ & $\bigcirc$ & 79.1 & 74.5 & 69.8 & 74.5 & 75.7 \\
+EQL~\cite{The_equalization_loss} & - & $\bigcirc$ & $\bigcirc$ & 79.7 & 71.7 & 67.1 & 72.8 & 74.2 \\
+\hline
+Zero-shot \cite{clip} & - & $\bigcirc$ & $\times$ & 65.3 & 
+        62.8 & 63.7 & 63.9 & 63.9\\
+Baseline & - & $\bigcirc$ & $\times$ & 76.1 & 68.7 & 51.8 & 65.5 & 69.1 \\
+\hline
+~ & $\mathcal{Z}^{(0)}$ & $\bigcirc$ & $\times$ & 76.0 & 70.2 & 59.6 & 68.6 & 70.9 \\
+GeLDA (Ours) &  $\mathcal{Z}^{(1)}$ & $\bigcirc$ & $\times$ & 75.8 & 70.1 & 58.2 & 68.0 & 70.6 \\
+~ &  $\mathcal{Z}^{(2)}$ & $\bigcirc$ & $\times$ & 75.5 & 69.7 & 59.9 & 68.4 & 70.5 \\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:result-image}
+\end{table}
+
+
+
+\subsection{Results}
+The results in Table~\ref{tab:result-image} show that using CLIP as the foundation model helps, along with full fine-tuning of the entire network (BALLAD, EQL, and LIFT) than LiVT and DeiT-LT that were trained from scratch. Comparing the Zero-shot and our Baseline model's results, training a task-specific adapter improves head and medium class accuracy but degrades tail class performance, leading to higher UA and WA but worse balance across classes.
+
+Applying GeLDA improves medium and tail class accuracy by 1.5\% and 7.8\%, respectively, in $\mathcal{Z}^{(0)}$, without sacrificing head class performance. While still behind full fine-tuning cases, this is meaningful since GeLDA requires no modification to the foundation model, making it practical for real-world scenarios. In terms of the performance differences of GeLDA across different latent spaces, unlike in the SER task, we find that they are marginal. Additional analysis with Figure can be found in Appendix~\ref{apdx:additional_image}. Compared to the zero-shot model that finds the nearest examples from the training set, GeLDA results maintain high performance in head classes, while the zero-shot results show a significant performance drop. 
+% This is because CLIP’s representations already focus on object-level information that is highly relevant for image classification.
+% 
+
+
+
+
+
+
+
+
+
+
+
+\iffalse
+Unlike the SER task, different latent spaces yield similar performance, likely due to CLIP’s already strong representations. As shown in Figure~\ref{fig:result-image-embedding}, embeddings are well-clustered even in $\mathcal{Z}_1$. This suggests that the impact of latent space augmentation depends on the characteristics of the foundation model.
+
+
+The results are reported in Table~\ref{tab:result-image}. We observe that performance improves when using the pre-trained weights of CLIP and performing full fine-tuning on the model. Interestingly, LiVT, the best-performing model trained from scratch, performs worse than CLIP in the zero-shot setting, highlighting the strong generalization ability of the pre-trained CLIP model for image classification tasks. When comparing the zero-shot results with the baseline model that includes a task-specific adapter trained on ImageNet-LT, we observe improvements in head and medium class accuracies. However, the performance on tail classes deteriorates, resulting in higher UA and WA overall, but with significantly reduced performance on underrepresented classes. Applying our GeLDA method improves medium and tail class accuracies by 1.5\% and 7.8\%, respectively, in the $\mathcal{Z}^{(0)}$ latent space, while maintaining the head class performance. Although the absolute performance is still below the models that fine-tune the foundation model, these improvements are meaningful because our method achieves them without updating any parameters of the foundation model, which aligns with practical deployment scenarios where model weights are often fixed.
+
+The results are reported in Table~\ref{tab:result-image}. The performance increases when using the pre-trained weights of CLIP and doing full fine-tuning of the model. The LiVT model, the best model among trained from scratch, performed worse the zero-shot model from CLIP, highlighting the powerful ability of the pre-trained CLIP model on image classification task.  When comparing the zero-shot and the baseline results, as training the task-specific adopter, the head and medium class accuracies increase, while the tail class performance deteriorates. This results in better UA and WA after training the adopter, however, we can observe that the underrepresented classes significant decrease. When apply the GeLDA method, the medium and tail classes' accuracy improved 1.5\% and 7.8\% for the $\mathcal{Z}_1$ case, respectively, while preserving the head class accuracy. Compare with the models that fine-tune the backbone foundation model, this result is still behind, but this is meaningful because our methods can improve the performance without changing any parameters in the foundation model, which often happens in the real world.
+
+When compare the effectiveness of GeLDA method in different latent space, different from SER task, the difference in the performance is not significant. We believe that this is because the different properties of foundation model. Figure~\ref{fig:result-image-embedding} depicts t-SNE plot of real and generated embedding for the different latent spaces. Different from plots in Figure~\ref{fig:result-embedding-bangla}, the vectors are very well-clustered even from the $\mathcal{Z}_1$ space. This is because the CLIP representations contain the information of the image objects and already perform well for image classification without any fine-tuning. As a result, different latent spaces in the adopters work almost samily. Therefore, our findings suggest that considering the characteristics of the backbone foundation model is important when performing the latent DA. 
+
+% \paragraph{Comparison between SER task}
+\fi

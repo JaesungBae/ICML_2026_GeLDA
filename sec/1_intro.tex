@@ -1,0 +1,67 @@
+Data plays a crucial role in the recent success of deep learning, while limited data availability can significantly deteriorate the model's performance. Recently, the literature has shown that foundation models~\cite{wav2vec, whisper, clip, bert} with billions of parameters can be trained in a self-supervised way on massive datasets. They have demonstrated the ability to extract high-quality representations with strong generalization capabilities. By leveraging these representations, task-specific adapters have achieved promising results in various domains~\cite{hu2022lora, clip_adopter, chen2022adaptformer}. Nevertheless, despite the benefits of foundation models, the challenge of data scarcity still exists when the adapters are trained from an imbalanced or poorly represented downstream dataset, e.g., by overfitting to dominant or overrepresented classes. Techniques such as loss re-weighting~\cite{logit_adjusted_loss, focal_loss} or gradient adjustment~\cite{The_equalization_loss} partially mitigate this issue, but the fundamental issue of the lack of data variability for underrepresented classes still presents. 
+% which remains a bottleneck for generalization.
+
+
+Data augmentation (DA) addresses data scarcity: it aims to generate additional samples that follow the original data distribution. A carefully designed DA method can effectively increase the portion of an underrepresented part of the training set, resulting in a better generalization to the real-world test cases. A typical approach to DA is to directly manipulate raw data samples (e.g., images, text, or audio) in the input space. Although it can benefit from advanced generative models such as text-to-speech (TTS)~\cite{ida_keyword_spotting, ida_text_is_all_you_need, ida_speech_enhancement1, ida_tts_1, ida_tts_2} or diffusion models~\cite{ida_image_1, ida_image_2, ida_image_3}, those DA methods inherit the challenge in generating realistic and diverse samples in input space due to the high dimensionality and complexity of data, often requiring large models and extensive data. This makes input-space DA especially difficult to handle underrepresented data. Moreover, raw data tend to include unnecessary details that a downstream task may not need, while the generative models are still tasked to respect. 
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Comparison between input space and latent space DA with generative models.}
+\label{tab:compare1}
+\vspace{0.1in}
+
+\begin{tabular}{c|c|c}
+    \toprule 
+    ~ & \makecell{\textbf{Input} \\ \textbf{Space DA}} & \makecell{\textbf{Latent} \\ \textbf{Space DA}} \\
+    \midrule
+    Task relevance & $\times$ & \checkmark \\
+    \midrule
+    Data complexity & High & Low \\
+    \midrule
+    Noise in data & Noisy & Less noisy \\
+    \midrule
+    Train/inference speed & Slow & Fast \\
+    \midrule
+    Required training data & Large & Small \\
+    \bottomrule
+\end{tabular}
+
+\end{table}
+
+
+
+In contrast, DA can operate in the feature space learned for a specific task, which is typically low-dimensional and highly abstract. 
+We expect DA in this space to be more efficient and effective than in the input space, as the downstream model can save its own feature transformation effort during training.
+% We expect that in this space, DA is often more efficient yet effective than in the input space, as the downstream model can save its own feature transformation effort during training. 
+Previous latent space DA methods are often based on the assumption that well-trained latent spaces are approximately convex, hence simple linear transformation or noise addition to the existing data points suffices~\cite{cheung2021modals, latent_filling, data_aug_in_feature_space, a_closer_look_at_feature_space_da}. A few studies have explored variational autoencoders (VAEs) to augment latent representations generatively~\cite{LeMDA, a_closer_look_at_feature_space_da}, but generative DA in the latent feature domain remains largely underexplored. The comparison of DA in input and feature spaces is presented in Table~\ref{tab:compare1}.
+
+
+
+
+
+% Previous works have assumed that well-trained latent spaces are approximately convex and isotropic, motivating simple statistical techniques such as linear interpolation or Gaussian noise addition as effective augmentation methods~\cite{}. While a few studies have explored the use of variational autoencoders (VAEs) as generative models to augment latent representations~\cite{}, generative model-based latent space data augmentation remains largely underexplored.
+% These methods are commonly applied to the last-layer features of pre-trained models, where the representations are most directly aligned with the task objective.
+% Moreover, since the latent space is often shaped to capture task-relevant information, augmentations in this space are more likely to preserve semantic consistency. 
+% , where generative models lack sufficient training data to capture the underlying distribution faithfully, leading to poor-quality or mode-collapsed samples.
+% This makes it computationally easier and more stable to generate meaningful variations.
+
+
+In this work, we propose a generative latent DA (GeLDA) framework, as an efficient and effective alternative to input space DA. It is characterized by its use of pre-trained foundation models to ensure that DA is performed in a well-structured and task-relevant latent space.
+% Because it is generating data in the latent space which has lower dimension, our GeLDA methods can be trained with fewer amount of data, it can trained to generate high-quality data in the latent space. 
+GeLDA also provides a mechanism that selects a proper latent space among different layers in the task-specific adopter to avoid a potentially trivial DA task happening in a feature space that is too task-specific, where overfitting could have already happened.
+% explore the effectiveness of operating the DA in the different levels of latent spaces 
+% If the foundation model is general-purpose (or trained with different task from target task), a
+% As the layers go deeper in the adopter, the latent space becomes more focused on the target task-specific information while losing the variability. As a result, if the latent DA performs in the too early layer, the latent vectors at there are still high-dimensional and contain complex information irrelevant to the target task. Otherwise, if it is too close to the output layer, two problems arise. First, the number of layers the augmented data can update is reduced, and second the room of variability that the generative models can generate decreases. These result in latent DA to be less effective.
+Finally, we also propose to inform the GeLDA process of various auxiliary information rather than relying solely on the downstream task's label structure. In speech and image classification experiments, we show that conditioned GeLDA better approximates the real-world feature distribution. 
+
+% since the variability of the data decreases, the latent DA becomes less effective.
+% similar thing happened as input space data augmentation; they are high-dimensional and have complex information, which makes it harder to generate a high-quality data. If they are too close to the output layer, there exists two problems; first the number of layers the augmented data can update is reduced, and second since the variability of the data decreases, the latent DA becomes less effective.
+
+To demonstrate the effectiveness of the proposed GeLDA model, we design two challenging, real-world inspired data scarcity scenarios: (a) speech emotion recognition (SER) model for low-resource languages without any emotional speech data (b) image classification with a highly imbalanced dataset. In the SER task, GeLDA achieves a 3.7\% point absolute improvement over the baseline, using a relatively small diffusion model (15 M parameters) trained from only 73 hours of data. This improvement is significant considering that the oracle model's performance is just 9.8\% point better. On the ImageNet-LT dataset \cite{imagenetlt}, GeLDA achieves an 8.1\% improvement in tail-class accuracy, while maintaining performance on head and medium classes. These results suggest that GeLDA can be meaningfully applied to various real-world tasks, helping to mitigate the often-overlooked challenges of low-resource and imbalanced scenarios. Our contributions are summarized as follows:
+\begin{itemize}[leftmargin=*, itemindent=0pt, itemsep=0pt]
+\item We propose GeLDA, a generative latent data augmentation framework that synthesizes new data in a learned latent space in a more efficient and effective way than input-space DA.
+\item We show that various auxiliary information about the target sub-domain can effectively condition GeLDA, overcoming the lack of data that also affects a generative model.
+\item We also show that selecting an appropriate latent space is crucial for latent-space augmentation by analyzing the properties of different layers in the network.
+\item We validate GeLDA on low-resource speech emotion recognition (SER) tasks. In addition, we show that GeLDA also generalizes to an imbalanced image classification task (ImageNet-LT).
+\end{itemize}

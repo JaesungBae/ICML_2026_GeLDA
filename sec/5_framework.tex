@@ -1,0 +1,13 @@
+\section{The training methods for GeLDA}
+\label{sec:training_methods}
+% \section{The training methods for generative latent data augmentation}
+
+GeLDA employs a pre-trained foundation model as a backbone encoder, followed by an additional set of task adapter layers. A latent diffusion model is learned to generate samples in one of the adapter layers. Figure~\ref{fig:model} shows the overall pipleline, using SER as a running downstream task example.
+
+\paragraph{The first stage: the generic model training} The foundation model remains completely frozen throughout our two-stage training, improving its applicability to cases involving black-box foundation models. Instead, a lightweight ($L=3$) task-specific adapter $\mathcal{H}^{(3)}\circ\mathcal{H}^{(2)}\circ\mathcal{H}^{(1)}$ is trained on top of the initial feature space $\mathcal{Z}^{(0)}$. For speech foundation models, attention-based temporal pooling can aggregate the temporal representation and extract an utterance-level feature. In the SER example, the first stage corresponds to training a multi-lingual SER system, although $\mathcal{D}$ is assumed to have a poor representation of the low-resource language $\kappa$. 
+
+\paragraph{Training a diffusion model for GeLDA} We employ diffusion models to generate latent feature vectors. Differently from LDM \cite{ldm}, our diffusion models are learned to synthesize samples pre-defined in the task-specific feature space $\mathcal{Z}^{(l)}$ starting from a Gaussian noise sample. To ensure the relevance to the desired class label $y$, we condition the diffusion process using CFG~\cite{cfg}. More importantly, to impose the association with the target sub-domain $\kappa$, a side information vector $u(\kappa)$ also conditions the model. For example, in the SER task, we randomly select $x\sim\mathcal{D}^{(\kappa)}$ and process it by $z\leftarrow\mathcal{H}^{(l)}\circ\cdots\circ\mathcal{H}^{(1)}\circ\mathcal{G}(x)$. While $\mathcal{D}^{(\kappa)}$ is poorly representing the emotion distribution in language $\kappa$, thus requiring DA, we assume that unlabeled speech utterances from language $\kappa$ must be abundant to inform the GeLDA model of the language information. The additional \emph{sub-domain reference} provides the model with structural cues about the target latent space.
+
+
+
+\paragraph{The second stage: fine-tuning the downstream model with augmented latent vectors} Using both the augmented latent vectors $\bar{z}$ and the original training dataset, we finetune only the layers after the target latent space, i.e., $>l$. The foundation model and all layers preceding $\leq l$ remain frozen.
