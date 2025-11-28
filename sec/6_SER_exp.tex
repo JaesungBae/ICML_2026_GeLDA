@@ -4,7 +4,7 @@
 \subsection{Task definition and dataset}
 First, we demonstrate the effectiveness of our proposed GeLDA methods for SER in low-resource languages. In this setup, the training dataset $\mathcal{D}$ consists of the subsets $\mathcal{D}=\cup_{k=1}^K\mathcal{D}^{(k)}$ where $k$ is the language index. Each sample $x_i$ is associated with one of five emotion labels. For a low-resource language $\kappa$, we assume its samples $\mathcal{D}^{(\kappa)}$ only have the ``neutral'' emotion to simulate the real-world issue, where annotated emotional speech samples are hard to acquire.
 
-\begin{table*}{t}
+\begin{table*}[t]
     \centering
     \footnotesize
     \vspace{-0.15in}
@@ -77,7 +77,7 @@ In addition to the data augmentation in $\mathcal{X}$, we also implement simple 
 % the linear transformation and noise addition data augmentation methods working in $\mathcal{Z}$. Following the methods proposed in \cite{latent_filling}, 
 
 
-\begin{table*}
+\begin{table*}[t]
 \caption{Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
     \label{tab:result-main}
     \centering
@@ -99,7 +99,8 @@ ours\_h2 & 200 & 0.8782 & 0.6757 & 0.6828 & 0.7868 & 0.8042 & 0.7507 & 0.7249 & 
 ours\_bootstrap\_h0 & 200 & 0.9040 & 0.7075 & 0.7395 & 0.8407 & 0.8262 & 0.8078 & 0.7062 & 0.8088 & 0.8116 & 0.8116 & 0.7958 & 36 \\
 ours\_bootstrap\_h1 & 200 & 0.8700 & 0.7025 & 0.7278 & 0.8050 & 0.8087 & 0.7787 & 0.7590 & 0.7878 & 0.7910 & 0.7917 & 0.7768 & 36 \\
 ours\_bootstrap\_h2 & 200 & 0.8843 & 0.6814 & 0.6860 & 0.7952 & 0.8089 & 0.7625 & 0.7317 & 0.7770 & 0.7847 & 0.7855 & 0.7684 & 36 \\
-\end{tabular}
+    \end{tabular}
+    }
 \end{table*}
 
 \begin{table}[t]
