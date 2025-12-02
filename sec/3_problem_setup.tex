@@ -1,3 +1,4 @@
+\section{Problem setup}
 % We consider a recognition problem where the goal is to classify inputs $x$ into labels $y \in \mathcal{Y}$. In many real-world scenarios, the training data exhibits label imbalance or partial supervision, where certain classes are underrepresented or entirely missing within parts of the data. Let the overall training dataset be $\mathcal{S} = \{D_i \mid i = 1, 2, \ldots, M\}$, where each $D_i = \{ (x_n, y_n) \mid y \in \mathcal{Y}_i,\ n = 1, \ldots, N_i \}$ is a subset of samples for the same classification task. In the data-scarce setting, soame subsets $D_i$ may contain only partial coverage of the label space $\mathcal{Y}_i$—either missing certain classes entirely or containing very few samples from them.
 
 % Since all subsets correspond to the same underlying task, we assume they share common structural patterns useful for recognition, while also exhibiting subset-specific differences. For example, in multilingual speech emotion recognition (SER), each $D_i$ could represent data from a different language, and $\mathcal{Y}$ corresponds to a fixed set of emotion categories. Then, for low-resource languages, $\mathcal{Y}_i$ may only cover certain emotion types. Then, our assumption is that emotional expressions share cross-linguistic patterns, but at the same time, each language may manifest emotions in a distinct way. Therefore, simply building a recognition system that works well for high-resource subsets and apply it to low-resource subsets is problematic.
@@ -14,38 +15,38 @@ While emotional expressions share general patterns across languages, e.g., angry
 % While emotional expressions may share \textit{cross-linguistic regularities}, e.g., angry speech is with a higher pitch than sad utterances, they can also exhibit \textit{language-specific characteristics}, e.g., in a specific language, the pitch variation among different emotions is low, making it insufficient to rely solely on models trained on high-resource languages without proper adaptation to low-resource ones~\cite{language_relationship_in_emotion_1, language_relationship_in_emotion_2}. 
 
 
-\begin{figure}[t]
+\begin{figure*}[ht]
      \centering
      \begin{subfigure}[b]{0.2515\textwidth}
          \centering
-         \includegraphics[width=\textwidth]{figs/p(x).pdf}\vspace{-0.05in}
+         \includegraphics[width=\textwidth]{fig/p(x).pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:input_dist}
      \end{subfigure}
      \hfill
      \begin{subfigure}[b]{0.2515\textwidth}
          \centering
-         \includegraphics[width=\textwidth]{figs/p(z).pdf}\vspace{-0.05in}
+         \includegraphics[width=\textwidth]{fig/p(z).pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:feature_dist}
      \end{subfigure}
      \hfill
      \begin{subfigure}[b]{0.239\textwidth}
          \centering
-         \includegraphics[width=\textwidth]{figs/Dtothek.pdf}\vspace{-0.05in}
+         \includegraphics[width=\textwidth]{fig/Dtothek.pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:low-resource-samples}
      \end{subfigure}
      \hfill
      \begin{subfigure}[b]{0.239\textwidth}
          \centering
-         \includegraphics[width=\textwidth]{figs/p(zbar).pdf}\vspace{-0.05in}
+         \includegraphics[width=\textwidth]{fig/p(zbar).pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:augmented}
      \end{subfigure}
         \caption{Illustration of the proposed GeLDA in the feature space. (a) Original data distribution $\mathcal{X}$ with a complex decision boundary. (b) More seprable class distributions in the learned feature space $\mathcal{Z}$. (c) Few samples from the low-resource subset $\mathcal{D}^{(\kappa)}$. Contours are from the unknown ground-truth distribution of sub-domain $\kappa$. (d) GeLDA's feature-space data augmentation results $\bar{z}$, whose sample distribution resemble the distribution of $k'$. $\kappa$ and $k'$ are semantically similar sub-domains.  }
         \label{fig:illustration}
-\end{figure}
+\end{figure*}
 
 
 \subsection{Improving separability in latent spaces}

@@ -15,6 +15,79 @@ We adopt a pre-trained foundation model from CLIP~\cite{clip} ViT-B/16. For the 
 
 
 % First, share the ViT-B architecture, but do not use the pre-trained weights and train it from scratch~\cite{learning_imbalanced_data_with_vision_transformers, DeiT-LT}. Second, use the pre-trained weights and update the ViT-B during fine-tuning~\cite{ballad, The_equalization_loss}. Last, use the pre-trained weights, but in the fine-tuned stage, adopt additional weights aside the ViT-B layer~\cite{lift}. However, our method aims to use the pre-trained weights of the foundation model, but assumes that we do not need to modify the foundation model at all. For the evaluation metrics, we also adopted the same evaluation metrics, UA and WA, from the SER task.
+\begin{table}[t]
+\centering
+\caption{Performance on ImageNetLT.}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\resizebox{1.0\linewidth}{!}{
+\begin{tabular}{lcccccccc}
+\toprule
+Method & Overall & Many & Med & Small & 5-shot & 3-shot & 1-shot & 0-shot \\
+\midrule
+LIFT        & 76.5 & 80.3 & 76.2 & 72.7 & 54.7 & 44.3 & 26.2 & 8.3 \\
++ GeLDA     & 76.8 & 79.3 & 75.6 & 75.7 & 65.2 & 70.4 & 65.9 & 56.6 \\
++ TTE       & 78.0 & 80.3 & 76.9 & 76.7 & 67.8 & 72.9 & 67.6 & 58.6 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Performance on Places365.}
+\begingroup
+\setlength{\tabcolsep}{3pt}
+\resizebox{1.0\linewidth}{!}{
+\begin{tabular}{lcccccccc}
+\toprule
+Method & Overall & Many & Med & Small & 5-shot & 3-shot & 1-shot & 0-shot \\
+\midrule
+LIFT        & 50.3 & 51.4 & 52.5 & 51.8 & 46.0 & 25.4 & 11.0 & 3.2 \\
++ GeLDA     & 50.9 & 49.7 & 52.0 & 52.9 & 53.6 & 44.2 & 47.0 & 34.8 \\
++ TTE       & 51.6 & 51.2 & 52.4 & 53.0 & 54.2 & 44.3 & 45.6 & 32.4 \\
+\bottomrule
+\end{tabular}
+}
+\endgroup
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Performance on ImageNetLT.}
+\begin{tabular}{lcccc}
+\toprule
+Method & Overall & Many & Med & Small \\
+\midrule
+LiVT & 60.9 & 73.6 & 56.4 & 41.0 \\
+BALLAD & 75.7 & 79.1 & 74.5 & 69.8
+\midrule
+LIFT        & 77.0 & 80.2 & 76.1 & 71.5 \\
++ GeLDA     & 76.9 & 79.2 & 75.5 & 75.5 \\
++ TTE       & 78.1 & 80.3 & 76.7 & 76.7 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+\begin{table}[t]
+\centering
+\caption{Performance on Places365.}
+\begin{tabular}{lcccc}
+\toprule
+Method & Overall & Many & Med & Small \\
+\midrule
+LiVT & 40.8 * 48.1 & 40.6 & 27.5 \\
+BALLAD & 49.5 & 49.3 & 50.2 & 48.4 \\
+\midrule
+LIFT        & 51.5 & 51.3 & 52.2 & 50.4 \\
++ GeLDA     & 51.4 & 49.8 & 52.3 & 52.4 \\
++ TTE       & 52.1 & 51.1 & 52.6 & 53.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
 
 \begin{table}[t]
 \centering

@@ -1,13 +1,18 @@
-\begin{wrapfigure}[17]{r}{0.4\textwidth}
-  \centering
-  \vspace{-0.35in}
-  \includegraphics[width=\linewidth]{figs/SER-pipeline.pdf}\vspace{-0.07in}
-  \caption{SER model architecture with an example of performing GeLDA in the $\mathcal{Z}^{(1)}$ space. $\mathcal{S}(\cdot)$ indicates the diffusion model trained to generate latent vectors, while $u(\kappa)$ represents the conditioning information about the target language $\kappa$.}
-  \label{fig:model}
-\end{wrapfigure}
+% \begin{wrapfigure}[17]{r}{0.4\textwidth}
+
+% \end{wrapfigure}
 
 \section{Principles of Generative Latent Data Augmentation}
 \label{sec:principles}
+
+\begin{figure}[ht]
+  \centering
+  % \vspace{-0.35in}
+  \includegraphics[width=0.8\linewidth]{fig/SER-pipeline.pdf}
+  % \vspace{-0.07in}
+  \caption{SER model architecture with an example of performing GeLDA in the $\mathcal{Z}^{(1)}$ space. $\mathcal{S}(\cdot)$ indicates the diffusion model trained to generate latent vectors, while $u(\kappa)$ represents the conditioning information about the target language $\kappa$.}
+  \label{fig:model}
+\end{figure}
 
 We assume that a reconstruction of the entire data distribution from only a few samples is infeasible due to the complexity of $p(x_{\text{data}})$ as well as the potential misrepresentation of the limited training data, which the generative models conditioned by the class labels \cite{openai_improved_ddpm} cannot easily overcome. Instead, GeLDA augments data in a latent embedding space $\mathcal{Z}$, extracted from a downstream model. While $\mathcal{Z}$ may still exhibit the class imbalance issue, 
 % In \cite{modals}, the authors assumed that if the neural network is learned properly, its latent space $\mathcal{Z}$ becomes mostly convex and isotropic. Similarly, 
