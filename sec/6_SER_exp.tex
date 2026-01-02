@@ -1,6 +1,7 @@
 % \subsection{Multi-lingual SER for low-resource languages}
 
 % \subsection{Experiment setups}
+\section{Experiments on multi-lingual SER for low-resource languages}
 \subsection{Task definition and dataset}
 First, we demonstrate the effectiveness of our proposed GeLDA methods for SER in low-resource languages. In this setup, the training dataset $\mathcal{D}$ consists of the subsets $\mathcal{D}=\cup_{k=1}^K\mathcal{D}^{(k)}$ where $k$ is the language index. Each sample $x_i$ is associated with one of five emotion labels. For a low-resource language $\kappa$, we assume its samples $\mathcal{D}^{(\kappa)}$ only have the ``neutral'' emotion to simulate the real-world issue, where annotated emotional speech samples are hard to acquire.
 
@@ -83,32 +84,147 @@ In addition to the data augmentation in $\mathcal{X}$, we also implement simple 
 
 
 \begin{table*}[t]
-\caption{Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
+\caption{(Zero-shot Results) Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
     \label{tab:result-main}
     \centering
     \footnotesize
     \resizebox{.9\textwidth}{!}{
-    \begin{tabular}{lrrrrrrrrrrr}
-    
+    \begin{tabular}{lrrrrrrr|rrrr}
+%     \toprule
+%     Experiment & Angry & Disgust & Fear & Happy & Neutral & Sad & Surprise & UAR & WA & Macro-F1 & UA without target emotion \\ 
+%     \midrule
+%     \multicolumn{12}{c}{3 Languages}\\
+%     \midrule
+% Baseline (pre-trained) & 65.67 & 42.33 & 38.00 & 52.00 & 98.00 & 47.67 & 23.00 & 55.83 & 57.75 & 55.36 & 47.98 \\ 
+% ours baseline finetune & 54.33 & 29.00 & 31.67 & 43.33 & 99.67 & 35.67 & 16.00 & 47.88 & 49.69 & 47.31 & 38.27 \\ 
+% \midrule
+% seamless m4t h0 (x3) & 35.67 & 20.67 & 8.67 & 38.67 & 99.33 & 29.67 & 3.00 & 38.00 & 39.17 & 33.33 & 26.65 \\ 
+% seamless expressive h0 (x3) & 51.67 & 25.33 & 36.33 & 47.33 & 97.33 & 36.33 & 23.00 & 48.23 & 49.17 & 47.80 & 39.12 \\ 
+% \midrule
+% ours h0 (x3) & 75.00 & 43.33 & 54.33 & 64.33 & 77.67 & 62.33 & 59.00 & 62.74 & 64.07 & 64.07 & 60.04 \\ 
+% ours h1 (x3)& 65.33 & 49.67 & 51.33 & 60.00 & 46.33 & 61.67 & 43.00 & 54.98 & 55.66 & 55.92 & 56.72 \\ 
+% ours h2 (x3)& 69.33 & 52.33 & 45.67 & 54.67 & 68.67 & 55.00 & 33.00 & 56.42 & 57.59 & 57.82 & 54.31 \\ 
+% ours h0 (x10)& 74.00 & 41.00 & 55.67 & 65.33 & 74.67 & 63.33 & 56.00 & 62.06 & 63.47 & 62.75 & 59.70 \\ 
+% ours h1 (x10)& 61.33 & 52.00 & 43.00 & 58.00 & 46.67 & 55.00 & 46.00 & 52.27 & 52.30 & 53.59 & 53.34 \\ 
+% ours h2 (x10)& 64.33 & 56.00 & 40.33 & 54.33 & 65.67 & 59.67 & 34.00 & 55.61 & 56.25 & 57.07 & 53.87 \\ 
+% \midrule
+% \multicolumn{12}{c}{10 Languages}\\
+% \midrule
+% Baseline (pre-trained) & 60.50 & 31.17 & 34.22 & 44.56 & 96.20 & 36.22 & 30.75 & 51.05 & 52.54 & 48.16 & 40.25 \\ 
+% ours baseline finetune & 47.30 & 22.83 & 28.11 & 33.89 & 99.70 & 26.33 & 25.00 & 43.83 & 45.57 & 40.50 & 30.49 \\ 
+% \midrule
+% ours h0 (x3)& 70.50 & 34.00 & 48.22 & 59.33 & 73.60 & 40.22 & 59.25 & 54.84 & 55.91 & 54.87 & 51.02 \\ 
+% ours h1 (x3)& 67.80 & 38.00 & 44.33 & 58.33 & 45.40 & 45.67 & 55.75 & 49.54 & 49.45 & 49.35 & 50.57 \\ 
+% ours h2 (x3)& 70.30 & 38.33 & 41.78 & 54.56 & 62.40 & 46.67 & 51.00 & 52.44 & 53.09 & 52.70 & 50.60 \\ 
+% ours h0 (x10)& 69.20 & 29.33 & 48.00 & 59.11 & 73.40 & 41.11 & 60.50 & 54.20 & 55.08 & 53.80 & 50.22 \\ 
+% ours h1 (x10)& 66.40 & 39.33 & 40.67 & 55.67 & 42.20 & 42.89 & 55.25 & 47.65 & 47.44 & 48.29 & 48.99 \\ 
+% ours h2 (x10)& 68.40 & 40.50 & 39.78 & 55.11 & 59.90 & 47.22 & 52.00 & 51.34 & 51.91 & 51.78 & 49.73 \\ 
+    \toprule
     Experiment & Angry & Disgust & Fear & Happy & Neutral & Sad & Surprise & UAR & WA & Macro-F1 & UA without target emotion \\ 
-    \multicolumn{12}{|c|}{3 Languages}\\
-Baseline (pre-trained) & 65.67 & 42.33 & 38.00 & 52.00 & 98.00 & 47.67 & 23.00 & 55.83 & 57.75 & 55.36 & 47.98 \\ 
-ours baseline finetune & 54.33 & 29.00 & 31.67 & 43.33 & 99.67 & 35.67 & 16.00 & 47.88 & 49.69 & 47.31 & 38.27 \\ 
-seamless expressive h0 & 51.67 & 25.33 & 36.33 & 47.33 & 97.33 & 36.33 & 23.00 & 48.23 & 49.17 & 47.80 & 39.12 \\ 
-seamless m4t h0 & 35.67 & 20.67 & 8.67 & 38.67 & 99.33 & 29.67 & 3.00 & 38.00 & 39.17 & 33.33 & 26.65 \\ 
-ours h0 & 75.00 & 43.33 & 54.33 & 64.33 & 77.67 & 62.33 & 59.00 & 62.74 & 64.07 & 64.07 & 60.04 \\ 
-ours h1 & 65.33 & 49.67 & 51.33 & 60.00 & 46.33 & 61.67 & 43.00 & 54.98 & 55.66 & 55.92 & 56.72 \\ 
-ours h2 & 69.33 & 52.33 & 45.67 & 54.67 & 68.67 & 55.00 & 33.00 & 56.42 & 57.59 & 57.82 & 54.31 \\ 
-\multicolumn{12}{|c|}{10 Languages}\\
-Baseline (pre-trained) & 60.50 & 31.17 & 34.22 & 44.56 & 96.20 & 36.22 & 30.75 & 51.05 & 52.54 & 48.16 & 40.25 \\ 
-ours baseline finetune & 47.30 & 22.83 & 28.11 & 33.89 & 99.70 & 26.33 & 25.00 & 43.83 & 45.57 & 40.50 & 30.49 \\ 
-ours h0 & 70.50 & 34.00 & 48.22 & 59.33 & 73.60 & 40.22 & 59.25 & 54.84 & 55.91 & 54.87 & 51.02 \\ 
-ours h1 & 67.80 & 38.00 & 44.33 & 58.33 & 45.40 & 45.67 & 55.75 & 49.54 & 49.45 & 49.35 & 50.57 \\ 
-ours h2 & 70.30 & 38.33 & 41.78 & 54.56 & 62.40 & 46.67 & 51.00 & 52.44 & 53.09 & 52.70 & 50.60 \\ 
+    \midrule
+    \multicolumn{12}{c}{Whisper}\\
+    \midrule
+Baseline (pre-trained) & 76.33 & 44.33 & 42.33 & 51.67 & 94.67 & 56.33 & 63.00 & 60.97 & 62.61 & 60.56 & 54.47 \\
+seamless expressive h0 & 62.67 & 37.67 & 37.00 & 50.00 & 91.67 & 49.67 & 62.00 & 55.05 & 56.04 & 55.33 & 48.03 \\
+seamless m4t h0 & 54.33 & 32.67 & 13.33 & 52.67 & 97.00 & 49.67 & 46.00 & 49.74 & 50.63 & 46.91 & 40.78 \\
+ours baseline finetune baseline finetune & 67.33 & 35.67 & 36.67 & 46.00 & 99.00 & 46.33 & 51.00 & 54.97 & 56.21 & 54.61 & 46.64 \\
+ours fixed h0 & 79.67 & 53.67 & 59.33 & 64.67 & 75.67 & 56.33 & 64.00 & 65.05 & 66.26 & 65.17 & 63.13 \\
+ours fixed h1 & 74.00 & 61.33 & 47.00 & 61.00 & 62.33 & 61.33 & 64.00 & 61.33 & 61.83 & 61.01 & 61.29 \\
+ours fixed h2 & 78.67 & 53.67 & 52.00 & 62.33 & 69.00 & 60.00 & 68.00 & 62.86 & 63.99 & 62.62 & 61.79 \\
+\midrule
+    \multicolumn{12}{c}{WavLM-Large}\\
+    \midrule
+Baseline (pre-trained) & 72.33 & 45.33 & 32.33 & 44.00 & 90.67 & 48.67 & 45.00 & 55.05 & 55.44 & 54.06 & 48.21 \\ 
+seamless expressive h0 & 55.33 & 33.00 & 27.67 & 32.00 & 92.00 & 53.67 & 42.00 & 48.63 & 48.59 & 46.52 & 40.34 \\ 
+seamless m4t h0 & 44.33 & 25.00 & 26.67 & 34.33 & 91.33 & 44.00 & 42.00 & 44.20 & 44.42 & 42.32 & 35.26 \\ 
+ours baseline finetune baseline finetune & 56.67 & 28.00 & 22.33 & 33.00 & 99.67 & 38.67 & 23.00 & 45.27 & 45.60 & 42.65 & 34.99 \\ 
+ours fixed h0 & 73.00 & 46.33 & 38.33 & 44.33 & 58.67 & 60.67 & 45.00 & 53.12 & 53.73 & 52.56 & 52.27 \\ 
+ours fixed h1 & 70.00 & 46.00 & 48.33 & 43.00 & 52.00 & 52.00 & 48.00 & 51.61 & 52.82 & 50.74 & 51.72 \\ 
+ours fixed h2 & 73.33 & 47.67 & 34.33 & 54.33 & 55.67 & 62.67 & 52.00 & 54.40 & 54.81 & 53.54 & 54.36 \\ 
+\midrule
+    \multicolumn{12}{c}{emotion2vec-base}\\
+    \midrule
+    
+Baseline (pre-trained) & 56.33 & 35.33 & 27.00 & 27.67 & 88.67 & 50.67 & 32.00 & 46.54 & 46.21 & 44.02 & 38.43 \\ 
+seamless expressive h0 & 43.67 & 23.33 & 26.67 & 18.33 & 92.00 & 50.33 & 22.00 & 41.37 & 41.37 & 38.71 & 31.67 \\ 
+seamless m4t h0 & 20.67 & 21.33 & 13.67 & 9.67 & 96.67 & 25.67 & 16.00 & 30.51 & 29.10 & 25.63 & 17.99 \\ 
+ours baseline finetune baseline finetune & 14.00 & 8.33 & 10.67 & 6.00 & 99.67 & 9.67 & 14.00 & 24.17 & 23.51 & 17.36 & 9.87 \\ 
+ours fixed h0 & 50.33 & 44.67 & 38.00 & 29.00 & 76.33 & 47.33 & 32.00 & 46.85 & 46.25 & 45.35 & 41.32 \\ 
+ours fixed h1 & 51.00 & 38.33 & 36.67 & 30.00 & 51.00 & 51.33 & 35.00 & 42.46 & 42.02 & 41.14 & 40.97 \\ 
+ours fixed h2 & 61.00 & 46.00 & 32.67 & 34.33 & 54.00 & 54.00 & 36.00 & 46.26 & 46.03 & 45.56 & 44.89 \\ 
+
+
+\bottomrule
     \end{tabular}
-    }
+}
 \end{table*}
 \todo[inline]{Table~\ref{tab:result-main} (10-language setting) might move to the appendix.}
+
+% \begin{table*}[t]
+% \caption{Average test results for multi-lingual SER models on six low-resource target languages. A star marks models evaluated only on supported languages. Bold and underlined values indicate the best and second-best performances, respectively. DA indicates the different locations where DAs are applied. Results with the Whisper-small backbone can be found in Appendix~\ref{apdx:additional-whisper-small}.}
+%     \label{tab:result-main}
+%     \centering
+%     \footnotesize
+%     \resizebox{.9\textwidth}{!}{
+%     \begin{tabular}{lrrrrrrr|rrr}
+%     \toprule
+%     Experiment & Angry & Disgust & Fear & Happy & Neutral & Sad & Surprise & UAR & WA & Macro-F1 \\ 
+%     \midrule
+%     \multicolumn{11}{c}{3 Languages}\\
+%     \midrule
+% Baseline (pre-trained) & 86.00 & 73.00 & 69.00 & 76.00 & 91.00 & 76.00 & 71.00 & 77.99 & 78.48 & 78.31 \\ 
+% ours baseline finetune & 87.27 & 75.98 & 68.93 & 77.69 & 91.43 & 78.34 & 71.67 & 79.67 & 79.96 & 79.82 \\ 
+% \midrule
+% seamless m4t h0 (x3) & 82.78 & 74.11 & 64.22 & 79.00 & 88.33 & 76.67 & 73.33 & 77.44 & 78.04 & 77.51 \\ 
+% + Bootstrapping & 87.89 & 80.33 & 72.89 & 80.78 & 90.11 & 77.56 & 68.00 & 81.15 & 81.18 & 80.93 \\ 
+% seamless expressive h0 (x3) & 83.89 & 70.11 & 67.00 & 77.67 & 89.89 & 76.00 & 70.33 & 77.21 & 78.10 & 77.09 \\ 
+% + Bootstrapping & 84.22 & 72.11 & 74.22 & 80.78 & 89.00 & 76.44 & 71.67 & 79.29 & 79.87 & 79.50 \\ 
+% \midrule
+% Latent Filling h0 & 88.44 & 78.11 & 72.33 & 83.22 & 92.11 & 81.56 & 73.33 & 82.37 & 82.67 & 82.55 \\ 
+% Latent Filling h1 & 88.78 & 74.22 & 74.44 & 82.00 & 90.89 & 78.67 & 70.67 & 81.16 & 81.52 & 81.37 \\ 
+% Latent Filling h2 & 88.22 & 73.11 & 71.11 & 77.78 & 92.00 & 79.56 & 73.00 & 80.13 & 80.57 & 80.33 \\ 
+% \midrule
+% ours h0 (x3) & 85.84 & 73.19 & 74.52 & 83.31 & 93.19 & 77.05 & 72.56 & 80.89 & 81.36 & 80.90 \\ 
+% + Bootstrapping & 87.88 & 76.15 & 74.93 & 83.94 & 92.17 & 84.68 & 70.64 & 82.90 & 83.06 & 82.89 \\ 
+% ours h1 (x3) & 84.79 & 75.12 & 70.24 & 79.58 & 88.48 & 75.27 & 67.31 & 78.52 & 79.00 & 78.67 \\ 
+% + Bootstrapping & 87.31 & 76.74 & 73.32 & 78.67 & 90.50 & 78.99 & 73.97 & 80.76 & 81.13 & 80.88 \\ 
+% ours h2 (x3) & 85.67 & 73.96 & 68.61 & 76.33 & 89.27 & 77.31 & 68.33 & 78.20 & 78.60 & 78.21 \\ 
+% + Bootstrapping & 86.67 & 74.52 & 69.76 & 78.15 & 89.95 & 78.17 & 69.49 & 79.20 & 79.60 & 79.26 \\ 
+% \midrule
+% ours h0 (x10) & 87.39 & 77.94 & 75.72 & 85.25 & 93.15 & 79.21 & 71.67 & 82.77 & 83.07 & 82.78 \\ 
+% + Bootstrapping  & 87.08 & 79.70 & 78.81 & 83.68 & 92.23 & 81.30 & 67.44 & 83.24 & 83.45 & 83.24 \\ 
+% ours h1 (x10) & 83.92 & 74.51 & 70.27 & 81.85 & 88.78 & 77.08 & 69.62 & 79.15 & 79.50 & 79.23 \\ 
+% + Bootstrapping  & 83.73 & 76.73 & 73.54 & 84.76 & 92.89 & 79.39 & 71.67 & 81.56 & 81.75 & 81.61 \\ 
+% ours h2 (x10) & 86.37 & 74.93 & 69.55 & 79.55 & 88.08 & 77.56 & 69.62 & 79.05 & 79.36 & 79.03 \\ 
+% + Bootstrapping & 86.31 & 72.85 & 69.28 & 76.98 & 90.10 & 78.44 & 70.26 & 78.72 & 79.15 & 78.73 \\ 
+
+% \midrule
+% \multicolumn{11}{c}{12 Languages}\\
+% \midrule
+% Baseline (pre-trained) & 88.00 & 66.00 & 68.00 & 79.00 & 81.00 & 75.00 & 72.00 & 76.93 & 77.84 & 76.46 \\ 
+% ours baseline finetune & 88.30 & 69.03 & 66.96 & 79.12 & 80.87 & 76.22 & 71.84 & 77.29 & 78.29 & 76.75 \\ 
+% \midrule
+% Latent Filling h0 & 89.64 & 71.67 & 66.10 & 82.55 & 83.17 & 77.73 & 75.75 & 79.39 & 80.57 & 78.77 \\ 
+% Latent Filling h1 & 89.11 & 70.00 & 70.50 & 81.27 & 81.27 & 76.27 & 75.25 & 78.67 & 79.65 & 78.10 \\ 
+% Latent Filling h2 & 89.03 & 67.62 & 69.93 & 80.30 & 81.20 & 77.76 & 74.33 & 78.35 & 79.25 & 77.73 \\ 
+% \midrule
+% ours h0 (x3) & 88.58 & 68.75 & 73.32 & 82.92 & 84.36 & 79.06 & 71.92 & 80.02 & 80.39 & 78.92 \\ 
+% + Bootstrapping  & 90.40 & 70.75 & 73.95 & 84.07 & 82.62 & 80.78 & 70.62 & 80.88 & 81.16 & 79.58 \\ 
+% ours h1 (x3) & 85.53 & 69.56 & 72.48 & 80.63 & 80.21 & 75.98 & 73.10 & 78.00 & 78.21 & 76.73 \\ 
+% + Bootstrapping & 87.00 & 70.25 & 72.78 & 80.50 & 80.87 & 77.87 & 75.90 & 78.78 & 79.10 & 77.68 \\ 
+% ours h2 (x3)  & 87.82 & 67.57 & 68.28 & 78.68 & 80.42 & 75.07 & 72.49 & 77.15 & 77.91 & 76.25 \\ 
+% + Bootstrapping & 88.43 & 68.14 & 68.60 & 79.52 & 80.89 & 76.25 & 73.17 & 77.70 & 78.47 & 76.84 \\ 
+% \midrule
+% ours h0 (x10) & 88.35 & 71.54 & 73.75 & 84.60 & 83.49 & 79.62 & 71.80 & 80.65 & 81.01 & 79.52 \\ 
+% + Bootstrapping & 87.98 & 73.68 & 73.39 & 84.83 & 83.32 & 81.09 & 70.32 & 81.01 & 81.42 & 79.77 \\ 
+% ours h1 (x10) & 85.98 & 68.50 & 71.79 & 82.56 & 81.64 & 78.17 & 73.18 & 78.86 & 79.13 & 77.62 \\ 
+% + Bootstrapping & 87.64 & 71.10 & 73.38 & 83.74 & 83.31 & 79.08 & 75.21 & 80.20 & 80.38 & 78.89 \\ 
+% ours h2 (x10) & 87.70 & 66.49 & 67.91 & 79.34 & 80.68 & 76.36 & 71.90 & 77.35 & 78.04 & 76.31 \\ 
+% + Bootstrapping & 87.75 & 67.29 & 68.50 & 79.92 & 80.90 & 77.04 & 73.26 & 77.70 & 78.39 & 76.77 \\ 
+% \bottomrule
+%     \end{tabular}
+%     }
+% \end{table*}
 
 \iffalse
 \begin{table}[t]
@@ -267,6 +383,15 @@ In summary, the proposed GeLDA method can significantly improve the language-spe
 
   % (Left) UA, (middle) accuracy on neutral emotion, and (right) average accuracy on non-neutral emotions.
 
+
+\begin{figure}[ht]
+  \centering
+  % \vspace{-0.35in}
+  \includegraphics[width=\linewidth]{fig/graph_whisper-large-v3_combined_3langs.pdf}
+  % \vspace{-0.07in}
+  \caption{SER model architecture with an example of performing GeLDA in the $\mathcal{Z}^{(1)}$ space. $\mathcal{S}(\cdot)$ indicates the diffusion model trained to generate latent vectors, while $u(\kappa)$ represents the conditioning information about the target language $\kappa$.}
+  \label{fig:model}
+\end{figure}
 
 
 \paragraph{Effect of additional data augmentation}

@@ -1,34 +1,34 @@
 \section{Introduction}
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Comparison between input-space and latent-space data augmentation (DA) with generative models. Because the latent space is more compact and aligned with the target task, DA can be performed more efficiently, making it better suited for low-resource settings.}
+\label{tab:compare1}
+% \vspace{0.1in}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{c|c|c}
+    \toprule 
+    ~ & \textbf{Input space DA} & \textbf{Latent space DA} \\
+    \midrule
+    Task relevance & $\times$ & \checkmark \\
+    \midrule
+    Noise in data & Noisy & Less noisy \\
+    \midrule
+    Data complexity & High & Low \\
+    \midrule
+    \makecell[c]{Model size \&\\Required training data} & Large & Small \\
+    \midrule
+    Train/inference speed & Slow & Fast \\
+    \bottomrule
+\end{tabular}
+}
+\end{table}
+
 Data plays a crucial role in the recent success of deep learning, while limited data availability can significantly deteriorate the model's performance. Recently, the literature has shown that foundation models~\cite{wav2vec, whisper, clip, bert} with billions of parameters can be trained in a self-supervised way on massive datasets. They have demonstrated the ability to extract high-quality representations with strong generalization capabilities. By leveraging these representations, task-specific adapters have achieved promising results in various domains~\cite{hu2022lora, clip_adopter, chen2022adaptformer}. Nevertheless, despite the benefits of foundation models, the challenge of data scarcity still exists when the adapters are trained from an imbalanced or poorly represented downstream dataset, e.g., by overfitting to dominant or overrepresented classes. Techniques such as loss re-weighting~\cite{logit_adjusted_loss, focal_loss} or gradient adjustment~\cite{The_equalization_loss} partially mitigate this issue, but the fundamental issue of the lack of data variability for underrepresented classes still presents. 
 % which remains a bottleneck for generalization.
 
 
 Data augmentation (DA) addresses data scarcity: it aims to generate additional samples that follow the original data distribution. A carefully designed DA method can effectively increase the portion of an underrepresented part of the training set, resulting in a better generalization to the real-world test cases. A typical approach to DA is to directly manipulate raw data samples (e.g., images, text, or audio) in the input space. Although it can benefit from advanced generative models such as text-to-speech (TTS)~\cite{ida_keyword_spotting, ida_text_is_all_you_need, ida_speech_enhancement1, ida_tts_1, ida_tts_2} or diffusion models~\cite{ida_image_1, ida_image_2, ida_image_3}, those DA methods inherit the challenge in generating realistic and diverse samples in input space due to the high dimensionality and complexity of data, often requiring large models and extensive data. This makes input-space DA especially difficult to handle underrepresented data. Moreover, raw data tend to include unnecessary details that a downstream task may not need, while the generative models are still tasked to respect. 
-
-\begin{table}[t]
-\centering
-\footnotesize
-\caption{Comparison between input space and latent space DA with generative models.}
-\label{tab:compare1}
-\vspace{0.1in}
-
-\begin{tabular}{c|c|c}
-    \toprule 
-    ~ & \makecell{\textbf{Input} \\ \textbf{Space DA}} & \makecell{\textbf{Latent} \\ \textbf{Space DA}} \\
-    \midrule
-    Task relevance & $\times$ & \checkmark \\
-    \midrule
-    Data complexity & High & Low \\
-    \midrule
-    Noise in data & Noisy & Less noisy \\
-    \midrule
-    Train/inference speed & Slow & Fast \\
-    \midrule
-    Required training data & Large & Small \\
-    \bottomrule
-\end{tabular}
-
-\end{table}
 
 
 

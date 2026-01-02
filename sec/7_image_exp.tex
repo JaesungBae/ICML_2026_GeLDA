@@ -1,3 +1,34 @@
+\section{Experiments on ImageNet-LT}
+\begin{table}[ht]
+    \centering
+    \footnotesizer
+    \caption{Efficiency comparison between input space DA with generative models and GeLDA. NP refers to the number of parameters.} % with 24 GB of memory.}
+    \resizebox{1.0\linewidth}{!}{
+    \begin{tabular}{crrcrc}
+        \toprule 
+        \textbf{Model} & \textbf{Training time} & \textbf{Training data} & \textbf{Inference time} & \textbf{NP} \\
+        % & \textbf{Data size}\\
+        \midrule
+        % XTTS & - & 27.3K h & 380 ms/sec & 466.9 M & \\%242.0 KB/sample\\
+        Seamless M4T & N/A & 4,500,000 h & 270 ms/sec& 2,300 M \\
+        % & 31.25 KB/sec\\
+        %118.7 KB/sample\\
+        Seamless Expressive & N/A & 29,800 h & 270 ms/sec& 2,100 M \\
+        % & \\%92.2 KB/sample\\
+        \hline
+        GeLDA (Ours) & AA h& $\approx$ 82 h & 550 ms/utterance& \todo{21} M 
+        \\
+        % & 8.6 KB/utterance\\
+        % Proposed ($\mathcal{Z}^{(1)}$) & ~ & $\approx$76.9 h\\
+        % Proposed ($\mathcal{Z}^{(2)}$) & ~ & $\approx$76.9 h\\
+        \bottomrule
+    \end{tabular}
+    }
+    \label{tab:compare2}
+\end{table}
+
+
+
 \subsection{Experiment setup}
 We also demonstrate the effectiveness of GeLDA on ImageNet-LT~\cite{imagenetlt} to improve its imbalance. It is a long-tailed image classification dataset derived from ImageNet-2012~\cite{imagenet_orig}, consisting of 1,000 categories with 186.3K images. 
 % The training split includes 115.8K images from 5 to 1,280 images per class, while the balanced test split follows the original ImageNet.
@@ -15,19 +46,186 @@ We adopt a pre-trained foundation model from CLIP~\cite{clip} ViT-B/16. For the 
 
 
 % First, share the ViT-B architecture, but do not use the pre-trained weights and train it from scratch~\cite{learning_imbalanced_data_with_vision_transformers, DeiT-LT}. Second, use the pre-trained weights and update the ViT-B during fine-tuning~\cite{ballad, The_equalization_loss}. Last, use the pre-trained weights, but in the fine-tuned stage, adopt additional weights aside the ViT-B layer~\cite{lift}. However, our method aims to use the pre-trained weights of the foundation model, but assumes that we do not need to modify the foundation model at all. For the evaluation metrics, we also adopted the same evaluation metrics, UA and WA, from the SER task.
+
+
+% \begin{table}[t]
+% \centering
+% \caption{Performance on ImageNetLT.}
+% \begin{tabular}{lc|rrr}
+% \toprule
+% Method & Overall & Many & Med & Small \\
+% \midrule
+% LiVT & 60.9 & 73.6 & 56.4 & 41.0  \\
+% DeiT-LT & 59.1 & 66.6 & 58.3 & 40.0 \\
+% BALLAD & 75.7 & 79.1 & 74.5 & 69.8 \\
+% VL-LTR & 77.2 & 84.5 & 74.6 & 59.3 \\
+% % LIFT+ & 77.0 & 79.9 & 76.1 & 71.7 \\
+% % + TTE & 78.3 & 81.0 & 77.5 & 73.4 \\
+% LIFT & 77.0 & 80.2 & 76.1 & 71.5 \\
+% + TTE & \textbf{78.3} & 81.2 & 77.4 & 73.4 \\
+% \midrule
+% Stable Diffusion 3 & 76.8 & 80.5 & 76.5 & 67.6 \\
+% + TTE & 78.0 & \textbf{81.4} & \textbf{77.7} & 69.2 \\
+% SD3 Qwen & 76.8 & 80.4 & 76.4 & 68.0 \\
+%  + TTE & 77.9 & 81.3 & 77.7 & 69.2 \\
+% GeLDA (Ours) & 77.0 & 79.7 & 75.7 & 73.9 \\
+% + TTE & 78.2 & 80.8 & 77.1 & \textbf{74.7} \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+\begin{table}[t]
+\centering
+\caption{Performance (\%) on ImageNet-LT. 
+$\mathcal{X}$ denotes input-space augmentation and $\mathcal{Z}$ denotes latent-space augmentation.}
+\label{tab:imagenetlt}
+\small
+\setlength{\tabcolsep}{3pt}
+\renewcommand{\arraystretch}{1.1}
+
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{Aug. Space} & \textbf{Overall} & \textbf{Many} & \textbf{Medium} & \textbf{Small} \\
+\midrule
+LiVT        & -- & 60.9 & 73.6 & 56.4 & 41.0 \\
+DeiT-LT     & -- & 59.1 & 66.6 & 58.3 & 40.0 \\
+BALLAD      & -- & 75.7 & 79.1 & 74.5 & 69.8 \\
+VL-LTR      & -- & 77.2 & 84.5 & 74.6 & 59.3 \\
+\midrule
+LIFT        & -- & 77.0 & 80.2 & 76.1 & 71.5 \\
++ TTE       & -- & \textbf{78.3} & 81.2 & 77.4 & 73.4 \\
+\midrule
+\multicolumn{6}{l}{\textit{Augmentation on top of LIFT}} \\
+\midrule
+SD3                  & \multirow{2}{*}{$\mathcal{X}$} & 76.8 & 80.5 & 76.5 & 67.6 \\
++ TTE            & ~ & 78.0 & \textbf{81.4} & \textbf{77.7} & 69.2 \\
+SD3 Qwen             & \multirow{2}{*}{$\mathcal{X}$} & 76.8 & 80.4 & 76.4 & 68.0 \\
++ TTE       & ~ & 77.9 & 81.3 & 77.7 & 69.2 \\
+GeLDA (Ours)         & \multirow{2}{*}{$\mathcal{Z}$} & 77.0 & 79.7 & 75.7 & 73.9 \\
++ TTE   & ~ & 78.2 & 80.8 & 77.1 & \textbf{74.7} \\
+\bottomrule
+\end{tabular}
+}
+
+\end{table}
+
+
+
+
+
+% \begin{table}[t]
+% \centering
+% \caption{Performance on Places365.}
+% \begin{tabular}{lr|rrr}
+% \toprule
+% Method & Overall & Many & Med & Small \\
+% \midrule
+% LiVT & 40.8 & 48.1 & 40.6 & 27.5 \\
+% BALLAD & 49.5 & 49.3 & 50.2 & 48.4 \\
+% VL-LTR & 50.1 & 54.2 & 48.5 & 42.0 \\
+% % LIFT+ & 51.5 & 50.8 & 52.0 & 51.6 \\
+% % + TTE & 52.1 & 51.5 & 52.8 & 51.7 \\
+% LIFT & 51.5 & 51.3 & 52.2 & 50.4 \\
+% +TTE & \textbf{52.2} & 51.7 & \textbf{53.1} & 50.9 \\
+% \midrule
+% Stable Diffusion 3 & 50.9 & 51.8 & 52.1 & 46.3 \\
+% +TTE & 51.6 & \textbf{52.0} & 53.0 & 47.4 \\
+% SD3 Qwen & 50.8 & 51.5 & 52.5 & 45.6 \\
+%  + TTE & 51.5 & 51.7 & 53.3 & 47.0 \\
+% GeLDA (Ours) & 51.5 & 50.6 & 51.8 & \textbf{52.5} \\
+% +TTE & 52.1 & 51.4 & 52.6 & 52.4 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+\begin{table}[t]
+\centering
+\caption{Performance (\%) on Places365. $\mathcal{X}$ and $\mathcal{Z}$ denote input-space and latent-space augmentation, respectively.}
+\label{tab:places365}
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.1}
+\resizebox{\linewidth}{!}{
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Method} & \textbf{Aug. Space} & \textbf{Overall} & \textbf{Many} & \textbf{Medium} & \textbf{Small} \\
+\midrule
+LiVT        & -- & 40.8 & 48.1 & 40.6 & 27.5 \\
+BALLAD      & -- & 49.5 & 49.3 & 50.2 & 48.4 \\
+VL-LTR      & -- & 50.1 & 54.2 & 48.5 & 42.0 \\
+\midrule
+LIFT        & -- & 51.5 & 51.3 & 52.2 & 50.4 \\
+LIFT + TTE  & -- & \textbf{52.2} & 51.7 & \textbf{53.1} & 50.9 \\
+\midrule
+SD3                 & \multirow{2}{*}{$\mathcal{X}$} & 50.9 & 51.8 & 52.1 & 46.3 \\
++ TTE           & ~ & 51.6 & \textbf{52.0} & 53.0 & 47.4 \\
+SD3 Qwen            & \multirow{2}{*}{$\mathcal{X}$} & 50.8 & 51.5 & 52.5 & 45.6 \\
++ TTE      & ~ & 51.5 & 51.7 & 53.3 & 47.0 \\
+GeLDA (Ours)        & \multirow{2}{*}{$\mathcal{Z}$}& 51.5 & 50.6 & 51.8 & \textbf{52.5} \\
++ TTE  & ~ & 52.1 & 51.4 & 52.6 & 52.4 \\
+\bottomrule
+\end{tabular}
+}
+\end{table}
+
+
+% \begin{table}[t]
+% \centering
+%     \footnotesize
+%     \caption{Results on the ImageNet-LT dataset, with all models using ViT-B/16 as the backbone. A circle in the \textbf{pre-train} column indicates the use of CLIP pre-trained weights. A circle in the \textbf{full fine-tune} column indicates that the model fine-tunes the backbone. A triangle indicates the use of an additional adaptation block to the foundation model. 
+%     % In contrast, our method requires no access to the foundation model.
+%     }
+%     \centering
+%     \footnotesize
+%     \resizebox{0.9\textwidth}{!}{
+%     \begin{tabular}{lccccccrr}
+%         \toprule
+%         \multicolumn{1}{c}{\textbf{Model}} & 
+%         \multicolumn{1}{c}{\textbf{DA}} & \multicolumn{1}{c}{\textbf{Pre-train}} & \multicolumn{1}{c}{\textbf{Full fine-tune}} & \multicolumn{1}{c}{\textbf{Head} (\%)} & \multicolumn{1}{c}{\textbf{Medium} (\%)} & \multicolumn{1}{c}{\textbf{Tail} (\%)} & 
+%         \multicolumn{1}{c}{\textbf{UA} (\%)} &
+%         \multicolumn{1}{c}{\textbf{WA} (\%)}\\
+%         \midrule
+%         % ViT~\cite{vit} & - & $\times$ & $\times$ & 50.5 & 23.5 & 6.9 & 27.0 & 31.6 \\
+% LiVT~\cite{learning_imbalanced_data_with_vision_transformers} & - & $\times$  & $\times$ & 76.4 & 69.7 & 42.7 & 62.9& 63.8 \\
+% DeiT-LT \cite{DeiT-LT} & - & $\times$  & $\times$ & 66.6 & 58.3 & 40.0 & 55.0 & 59.1 \\
+% LIFT~\cite{lift} & - & $\bigcirc$ & $\triangle$ & 80.2 & 76.1 & 71.5 & 75.9 & 77.0 \\
+% BALLAD~\cite{ballad} & - & $\bigcirc$ & $\bigcirc$ & 79.1 & 74.5 & 69.8 & 74.5 & 75.7 \\
+% EQL~\cite{The_equalization_loss} & - & $\bigcirc$ & $\bigcirc$ & 79.7 & 71.7 & 67.1 & 72.8 & 74.2 \\
+% \hline
+% Zero-shot \cite{clip} & - & $\bigcirc$ & $\times$ & 65.3 & 
+%         62.8 & 63.7 & 63.9 & 63.9\\
+% Baseline & - & $\bigcirc$ & $\times$ & 76.1 & 68.7 & 51.8 & 65.5 & 69.1 \\
+% \hline
+% ~ & $\mathcal{Z}^{(0)}$ & $\bigcirc$ & $\times$ & 76.0 & 70.2 & 59.6 & 68.6 & 70.9 \\
+% GeLDA (Ours) &  $\mathcal{Z}^{(1)}$ & $\bigcirc$ & $\times$ & 75.8 & 70.1 & 58.2 & 68.0 & 70.6 \\
+% ~ &  $\mathcal{Z}^{(2)}$ & $\bigcirc$ & $\times$ & 75.5 & 69.7 & 59.9 & 68.4 & 70.5 \\
+%         \bottomrule
+%     \end{tabular}
+%     }
+%     \label{tab:result-image}
+% \end{table}
+
+
 \begin{table}[t]
 \centering
 \caption{Performance on ImageNetLT.}
 \begingroup
 \setlength{\tabcolsep}{3pt}
 \resizebox{1.0\linewidth}{!}{
-\begin{tabular}{lcccccccc}
+\begin{tabular}{lr|rrrrrrr}
 \toprule
 Method & Overall & Many & Med & Small & 5-shot & 3-shot & 1-shot & 0-shot \\
 \midrule
-LIFT        & 76.5 & 80.3 & 76.2 & 72.7 & 54.7 & 44.3 & 26.2 & 8.3 \\
-+ GeLDA     & 76.8 & 79.3 & 75.6 & 75.7 & 65.2 & 70.4 & 65.9 & 56.6 \\
-+ TTE       & 78.0 & 80.3 & 76.9 & 76.7 & 67.8 & 72.9 & 67.6 & 58.6 \\
+LIFT & 76.5 & 80.3 & 76.2 & 66.9 & 54.7 & 44.3 & 26.2 & 8.3 \\
++ TTE       &77.8 & 81.3 & 77.6 & 68.7 & 56.3 & 47.4 & 26.7 & 10.2 \\
+\midrule
+SD3 & 76.6 & 80.5 & 76.5 & 66.1 & 57.2 & 55.2 & 54.8 & 41.4 \\
++ TTE       &77.9 & \textbf{81.5} & \textbf{77.9} & 67.4 & 59.0 & 58.8 & 56.2 & 42.6 \\
+SD3 + Qwen & 76.6 & 80.3 & 76.5 & 66.3 & 54.3 & 56.2 & 51.4 & 42.5 \\
++TTE & 77.8 & 81.4 & 77.9 & 67.5 & 56.6 & 59.2 & 52.2 & 43.8 \\
+GeLDA (Ours) & 76.9 & 79.8 & 75.6 & 72.7 & 62.9 & 67.4 & 65.0 & 56.2 \\
++ TTE       & \textbf{78.1} & 80.9 & 77.1 & \textbf{73.9} & \textbf{65.2} & \textbf{69.7} & \textbf{65.9} & \textbf{57.5} \\
 \bottomrule
 \end{tabular}
 }
@@ -40,91 +238,25 @@ LIFT        & 76.5 & 80.3 & 76.2 & 72.7 & 54.7 & 44.3 & 26.2 & 8.3 \\
 \begingroup
 \setlength{\tabcolsep}{3pt}
 \resizebox{1.0\linewidth}{!}{
-\begin{tabular}{lcccccccc}
+\begin{tabular}{lr|rrrrrrr}
 \toprule
 Method & Overall & Many & Med & Small & 5-shot & 3-shot & 1-shot & 0-shot \\
 \midrule
-LIFT        & 50.3 & 51.4 & 52.5 & 51.8 & 46.0 & 25.4 & 11.0 & 3.2 \\
-+ GeLDA     & 50.9 & 49.7 & 52.0 & 52.9 & 53.6 & 44.2 & 47.0 & 34.8 \\
-+ TTE       & 51.6 & 51.2 & 52.4 & 53.0 & 54.2 & 44.3 & 45.6 & 32.4 \\
+LIFT & 50.3 & 51.4 & 52.5 & 43.2 & 46.0 & 25.4 & 11.0 & 3.2 \\
++TTE & 51.0 & 52.0 & \textbf{53.4} & 43.7 & 46.7 & 26.3 & 11.5 & 3.4 \\
+\midrule
+SD3 & 50.4 & 51.6 & 52.4 & 43.7 & 44.8 & 36.0 & 36.4 & 27.6 \\
++TTE               & 51.2 & \textbf{52.0} & 53.3 
+& 44.8 & 46.8 & 37.5 & 37.4 & 28.8 \\
+SD3 + Qwen & 50.3 & 51.3 & 52.7 & 42.8 & 42.3 & 34.8 & 34.2 & 26.3 \\
++TTE & 51.1 & 51.7 & 53.6 & 44.4 & 44.4 & 36.4 & 35.8 & 27.9 \\
+GeLDA (Ours) & 50.9 & 50.3 & 51.6 & \textbf{50.6} & \textbf{52.8} & 44.9 & \textbf{48.1} & \textbf{35.5} \\
++TTE         & \textbf{51.7} & 51.3 & 52.6 & 50.2 & 52.6 & \textbf{45.1} & 46.7 & 33.4 \\
 \bottomrule
 \end{tabular}
 }
 \endgroup
 \end{table}
-
-\begin{table}[t]
-\centering
-\caption{Performance on ImageNetLT.}
-\begin{tabular}{lcccc}
-\toprule
-Method & Overall & Many & Med & Small \\
-\midrule
-LiVT & 60.9 & 73.6 & 56.4 & 41.0 \\
-BALLAD & 75.7 & 79.1 & 74.5 & 69.8
-\midrule
-LIFT        & 77.0 & 80.2 & 76.1 & 71.5 \\
-+ GeLDA     & 76.9 & 79.2 & 75.5 & 75.5 \\
-+ TTE       & 78.1 & 80.3 & 76.7 & 76.7 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-\begin{table}[t]
-\centering
-\caption{Performance on Places365.}
-\begin{tabular}{lcccc}
-\toprule
-Method & Overall & Many & Med & Small \\
-\midrule
-LiVT & 40.8 * 48.1 & 40.6 & 27.5 \\
-BALLAD & 49.5 & 49.3 & 50.2 & 48.4 \\
-\midrule
-LIFT        & 51.5 & 51.3 & 52.2 & 50.4 \\
-+ GeLDA     & 51.4 & 49.8 & 52.3 & 52.4 \\
-+ TTE       & 52.1 & 51.1 & 52.6 & 53.0 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-
-\begin{table}[t]
-\centering
-    \footnotesize
-    \caption{Results on the ImageNet-LT dataset, with all models using ViT-B/16 as the backbone. A circle in the \textbf{pre-train} column indicates the use of CLIP pre-trained weights. A circle in the \textbf{full fine-tune} column indicates that the model fine-tunes the backbone. A triangle indicates the use of an additional adaptation block to the foundation model. 
-    % In contrast, our method requires no access to the foundation model.
-    }
-    \centering
-    \footnotesize
-    \resizebox{0.9\textwidth}{!}{
-    \begin{tabular}{lccccccrr}
-        \toprule
-        \multicolumn{1}{c}{\textbf{Model}} & 
-        \multicolumn{1}{c}{\textbf{DA}} & \multicolumn{1}{c}{\textbf{Pre-train}} & \multicolumn{1}{c}{\textbf{Full fine-tune}} & \multicolumn{1}{c}{\textbf{Head} (\%)} & \multicolumn{1}{c}{\textbf{Medium} (\%)} & \multicolumn{1}{c}{\textbf{Tail} (\%)} & 
-        \multicolumn{1}{c}{\textbf{UA} (\%)} &
-        \multicolumn{1}{c}{\textbf{WA} (\%)}\\
-        \midrule
-        % ViT~\cite{vit} & - & $\times$ & $\times$ & 50.5 & 23.5 & 6.9 & 27.0 & 31.6 \\
-LiVT~\cite{learning_imbalanced_data_with_vision_transformers} & - & $\times$  & $\times$ & 76.4 & 69.7 & 42.7 & 62.9& 63.8 \\
-DeiT-LT \cite{DeiT-LT} & - & $\times$  & $\times$ & 66.6 & 58.3 & 40.0 & 55.0 & 59.1 \\
-LIFT~\cite{lift} & - & $\bigcirc$ & $\triangle$ & 80.2 & 76.1 & 71.5 & 75.9 & 77.0 \\
-BALLAD~\cite{ballad} & - & $\bigcirc$ & $\bigcirc$ & 79.1 & 74.5 & 69.8 & 74.5 & 75.7 \\
-EQL~\cite{The_equalization_loss} & - & $\bigcirc$ & $\bigcirc$ & 79.7 & 71.7 & 67.1 & 72.8 & 74.2 \\
-\hline
-Zero-shot \cite{clip} & - & $\bigcirc$ & $\times$ & 65.3 & 
-        62.8 & 63.7 & 63.9 & 63.9\\
-Baseline & - & $\bigcirc$ & $\times$ & 76.1 & 68.7 & 51.8 & 65.5 & 69.1 \\
-\hline
-~ & $\mathcal{Z}^{(0)}$ & $\bigcirc$ & $\times$ & 76.0 & 70.2 & 59.6 & 68.6 & 70.9 \\
-GeLDA (Ours) &  $\mathcal{Z}^{(1)}$ & $\bigcirc$ & $\times$ & 75.8 & 70.1 & 58.2 & 68.0 & 70.6 \\
-~ &  $\mathcal{Z}^{(2)}$ & $\bigcirc$ & $\times$ & 75.5 & 69.7 & 59.9 & 68.4 & 70.5 \\
-        \bottomrule
-    \end{tabular}
-    }
-    \label{tab:result-image}
-\end{table}
-
 
 
 \subsection{Results}
