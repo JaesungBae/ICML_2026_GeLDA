@@ -9,7 +9,7 @@ First, we demonstrate the effectiveness of our proposed GeLDA methods for SER in
     \centering
     \footnotesize
     % \vspace{-0.15in}
-    \caption{Summary of multi-lingual speech emotion dataset.}
+    \caption{Summary of multi-lingual speech emotion dataset in hours.}
     % \vspace{-0.05in}
     \begingroup
 \setlength{\tabcolsep}{3pt}
@@ -53,7 +53,7 @@ The total number of speech samples is BLABLA, and the average duration is BLABLA
 
 \subsection{Implementation details and evaluation metrics}
 We adopt three pretrained foundation models: WavLM-large~\cite{wavlm}, emotion2vec-based, and Whisper-large~\cite{whisper}. 
-In the first and second stages, where pre-training the SER model and diffusino model for augmentation, following training datsaet is used: $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$. 
+In the first and second stages, where pre-training the SER model and diffusion model for augmentation, following training datsaet is used: $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$. 
 % The diffusion model is trained with the combination $\mathcal{D}^{\setminus \kappa}\cup \tilde{\mathcal{D}}^{(\kappa)}$, i.e., all other languages and neutral examples from the target language. 
 The diffusion models are conditioned with emotion embedding, and the sampled neutral utterance embedding $z^{(l)}\in\tilde{\mathcal{D}}^{(\kappa)}$, when the GeLDA is operated in $\mathcal{Z}^{(l)}$ space. 
 Then, the diffusion model gerates new feature vectors $\bar{z}$ for every emotions for the target language $\kappa$. The resulting synthetic dataset is denoted as $\bar{\mathcal{D}}^{(\kappa)}$.
@@ -329,10 +329,12 @@ Table~\ref{tab:result-main} presents the results for three different backbone fo
 Applying input space DA does not bring performance improvement. We attribute this to the limited emotional expressiveness of synthetic speech. SeamlessExpressive achieves better results than the Seamless M4T, highlighting the importance of expressive generation. However, all TTS models fail to improve the class imbalance (e.g., poor accuracy in \textit{``disgust''} and \textit{``fear''}).
 % Simple latent DA, Latent Filling, also fails to improve upon the zero-shot baseline ($\mathcal{D}^{\setminus \kappa}$), although it outperforms TTS-based DA, implying a well-defined latent space is effective for DA.
 
+\textbf{This paragraph not yet updated.}
 With our proposed GeLDA method, UA improves by 5.93\%, 3.58\%, and 1.93\% points for Whisper-large, emotion2vec-base, and WavLM-large, respectively. Given the upper bound improvement by using oracle data $\mathcal{D}$ is 9.82\%\todo{update} for the Whisper-large backbone model, these improvements are substantial. Among different latent spaces, augmentation at $\mathcal{Z}^{(1)}$ consistently outperforms others, revealing the tradeoff in choosing the right latent space.
 Figure~\ref{fig:result-embedding-bangla} shows t-SNE plots of ground-truth (GT) test embeddings and generated vectors in Bangla. Augmentation at $\mathcal{Z}^{(0)}$ produces samples far from the GT distribution, likely due to the irrelevant information in the low-level feature space. However, augmented data at $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$ show better harmonization with the GT embeddings.
 Comparing $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$, although GeLDA appears to be more successful in $\mathcal{Z}^{(2)}$, it limits the following fine-tuning process's capability. 
 
+\textbf{This paragraph not yet updated.}
 In summary, the proposed GeLDA method can significantly improve the language-specific SER results by using augmented data with a matching language label.  More detailed results on each language can be found in Appendix \ref{apdx:each_language}. Additional SER results with Whisper-small, visualization of the augmented features before and after fine-tuning, and language-agnostic GeLDA for multilingual SER are also presented in \ref{app:additional_ser}.
 
 \iffalse
@@ -390,7 +392,7 @@ In summary, the proposed GeLDA method can significantly improve the language-spe
 \end{figure}
 
 
-\paragraph{Ablation Study}
+\subsection{Ablation Study}
 % In Figure~\ref{fig:aug_num}, we report the results for the different numbers of augmented samples for each emotion for the target language. The performances of the input space data augmentation methods decrease as the number of augmeted samples increase. This indicate that the quality of generated samples are low.  For the $\mathcal{Z}^{(0)}$, the performance gradually increases as the number of augmented data points increases. However, for the $\mathcal{Z}^{(1)}$ space, the performance gradually decreases, which indicates the quality of the generated samples are bad. We argue that this is because the $\mathcal{Z}^{(1)}$ space contains less information about the languages than the $\mathcal{Z}^{(0)}$, which makes the generated data in $\mathcal{Z}^{(1)}$ space more lower quality than the $\mathcal{Z}^{(0)}$ space. $\mathcal{Z}^{(2)}$ is the very last layer, which makes its latent space linearly seperable, and therefore eliminating all the language specific information. This makes the data augmentation in this space much easier, but also not very effective compared to the $\mathcal{Z}^{(0)}$.
 
 % This trend can be also find in Figure~\ref{fig:diffusion_size} where we conduct the experiments with controling the diffusion model size. For the smallest size model, $\mathcal{Z}^{(1)}$ and $\mathcal{Z}^{(2)}$ perform better than the $\mathcal{Z}^{(0)}$. This may because the information in those spaces are large, and as the diffusion model size increases, it overfitted to the data. In contrast, for the $\mathcal{Z}^{(0)}$, since this is the representation from the foundation model, it contains rich information in there, and as the diffusion model size increases, the performance also gradually increases. We finally highlight that compared to the input space data augmentation methods, our model performes much better with significiantly smaller amount of model size. 

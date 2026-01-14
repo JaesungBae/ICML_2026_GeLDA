@@ -8,37 +8,37 @@
 
 % \paragraph{Problem Setting.}
 \subsection{Imbalanced datasets}
-A recognition problem aims to map inputs $x$ into labels $y$ chosen from a fixed set of labels $\mathcal{Y}$. In many real-world scenarios, the training data suffers from \textit{label imbalance} or \textit{partial supervision}, where certain classes are severely underrepresented or entirely missing in parts of the dataset. Let $\mathcal{D}= \cup_{k=1}^K \mathcal{D}^{(k)}$ be the entire training set, where each subset $D^{(k)}\!=\!\{ (x_i, y_i) \mid y_i\!\in\!\mathcal{Y}^{(k)}, \ i \!\!=\!\! 1, \ldots, N_k \}$ consists of $N_k$ samples, covering the label set only partially: $\mathcal{Y}^{(k)} \subseteq \mathcal{Y}$. This case implies data scarcity, typically due to missing certain classes or containing few examples.
+A recognition problem aims to map an input data sample $x$ into its corresponding label $y$ chosen from a fixed set of labels $\mathcal{Y}$. In many real-world scenarios, the training data suffers from \textit{label imbalance} or \textit{partial supervision}, where certain classes are severely underrepresented or entirely missing in the training set. Let $\mathcal{D}= \cup_{k=1}^K \mathcal{D}^{(k)}$ be the entire training set, where each subset $D^{(k)}\!=\!\{ (x_i, y_i) \mid y_i\!\in\!\mathcal{Y}^{(k)}, \ i \!\!=\!\! 1, \ldots, N_k \}$ consists of $N_k$ samples, covering the label set only partially: $\mathcal{Y}^{(k)} \subseteq \mathcal{Y}$. This case implies data scarcity, typically due to missing classes or too few examples per class.
 
-Since all subsets $D^{(k)}$ correspond to the same underlying recognition task, we assume they share \textit{task-relevant structural patterns}, while also exhibiting \textit{subset-specific variations}. For example, in multilingual SER, each $D^{(k)}$ may represent data collected from language $k$, while $\mathcal{Y}$ corresponds to a fixed set of global emotion categories. In such settings, low-resource languages may only cover a subset of these emotions, i.e., $\mathcal{Y}^{(k)} \subset \mathcal{Y}$. 
+Since all subsets $D^{(k)}$ correspond to the same underlying recognition task, we assume they share \textit{task-relevant structural patterns}, while also exhibiting \textit{subset-specific variations}. For example, in multilingual SER, each $D^{(k)}$ may represent data collected from language $k$, while $\mathcal{Y}$ corresponds to a fixed set of global emotion categories. In such settings, low-resource languages are defined as language-specific subsets that cover only part of these emotion categories, i.e., $\mathcal{Y}^{(k)} \subset \mathcal{Y}$, or the ones that suffer from severe imbalance. 
 While emotional expressions share general patterns across languages, e.g., angry speech typically has a higher pitch than sad utterances, they also exhibit considerable variation among languages due to the linguistic structures and cultural nuances~\cite{language_relationship_in_emotion_1, language_relationship_in_emotion_2}. This makes it insufficient to rely solely on models trained on high-resource languages without proper adaptation to low-resource ones.
 % While emotional expressions may share \textit{cross-linguistic regularities}, e.g., angry speech is with a higher pitch than sad utterances, they can also exhibit \textit{language-specific characteristics}, e.g., in a specific language, the pitch variation among different emotions is low, making it insufficient to rely solely on models trained on high-resource languages without proper adaptation to low-resource ones~\cite{language_relationship_in_emotion_1, language_relationship_in_emotion_2}. 
 
 
 \begin{figure*}[ht]
      \centering
-     \begin{subfigure}[b]{0.21\textwidth}
+     \begin{subfigure}[b]{0.23\textwidth}
          \centering
          \includegraphics[width=\textwidth]{fig/p(x).pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:input_dist}
      \end{subfigure}
      \hfill
-     \begin{subfigure}[b]{0.21\textwidth}
+     \begin{subfigure}[b]{0.23\textwidth}
          \centering
          \includegraphics[width=\textwidth]{fig/p(z).pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:feature_dist}
      \end{subfigure}
      \hfill
-     \begin{subfigure}[b]{0.2\textwidth}
+     \begin{subfigure}[b]{0.22\textwidth}
          \centering
          \includegraphics[width=\textwidth]{fig/Dtothek.pdf}\vspace{-0.05in}
          \caption{}
          \label{fig:low-resource-samples}
      \end{subfigure}
      \hfill
-     \begin{subfigure}[b]{0.2\textwidth}
+     \begin{subfigure}[b]{0.22\textwidth}
          \centering
          \includegraphics[width=\textwidth]{fig/p(zbar).pdf}\vspace{-0.05in}
          \caption{}
@@ -54,8 +54,8 @@ Deep learning research has shown that a series of nonlinear feature transformati
 % In this regard, foundation models trained on large, diverse datasets have shown strong generalization across tasks by providing robust and transferable representations. These models can help improve overall performance, especially for underrepresented classes, by capturing patterns that are difficult to learn from a limited subset of data alone. 
 Figure \ref{fig:input_dist} and \ref{fig:feature_dist} illustrate the merit of such a feature space, where the highly nonlinear classification problem in the raw data space $\mathcal{X}$ becomes more separable in the new feature space $\mathcal{Z}$. Meanwhile, score-based generative models in the latent space \cite{ldm, audio_ldm} have already shown their advantage since they can focus on the high-level structure captured in a smooth and lower-dimensional latent space, while the low-level details (e.g., pixel-level texture) are left to the decoding process. The basic assumption is that, in the feature space, simple (e.g., linear) relationships between feature vectors represent their perceptual similarity.
 
-\noindent\textbf{Proposition 1.} There exists a feature transformation function $\mathcal{F} : \mathbb{R}^D \rightarrow \mathbb{R}^M$, with $M < D$, such that for $z_i \leftarrow \mathcal{F}(x_i)$. Consider a pair of examples $(x_i, x_j)$ with a measured task-relevant perceptual similarity $\mathcal{E}_{\text{perceptual}}(x_i, x_j)$. Their Euclidean distance calculated in the feature space is more correlated to the perceptual similarity $z\in\mathcal{Z}$ than the one in the original space $x\in\mathcal{X}$. Formally, $\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| z_i - z_j \|_2^2 - \mathcal{E}_{\text{perceptual}}(x_i, x_j) \right|
-<\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| x_i - x_j \|_2^2 - \mathcal{E}_{\text{perceptual}}(x_i, x_j) \right|$. Here, $p(x_{\text{data}})$ denotes the data distribution.
+\noindent\textbf{Proposition 1.} There exists a feature transformation function $\mathcal{F} : \mathbb{R}^D \rightarrow \mathbb{R}^M$, with $M < D$, such that for $z_i \leftarrow \mathcal{F}(x_i)$. Consider a pair of examples $(x_i, x_j)$ with a measured task-relevant semantic similarity $\mathcal{E}_{\text{semantic}}(x_i, x_j)$. Their Euclidean distance calculated in the feature space $\mathcal{Z}$ is more correlated to the semantic similarity than the one in the original data space $\mathcal{X}$. Formally, $\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| z_i - z_j \|_2^2 - \mathcal{E}_{\text{semantic}}(x_i, x_j) \right|
+<\mathbb{E}_{x_i, x_j \sim p(x_{\text{data}})} \left| \| x_i - x_j \|_2^2 - \mathcal{E}_{\text{semantic}}(x_i, x_j) \right|$. Here, $p(x_{\text{data}})$ denotes the data distribution.
 
 In this paper, we empirically support the proposition. As shown in the deep learning-based classification systems and latent diffusion models, the improved class separability and preserved semantic relationships in the feature space enhance the quality of generative data augmentation, too. 
 
